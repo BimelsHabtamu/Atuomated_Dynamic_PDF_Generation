@@ -1,5 +1,12 @@
-// TODO: Audit & Reports routes (FR-036 to FR-040)
-// GET /api/audit/:docId        - Full audit trail for a document
-// GET /api/audit/dashboard     - KPIs: docs today, avg approval time, top templates
-// GET /api/audit/export        - Monthly CSV export per department
-// GET /api/audit/search        - Search & filter documents
+const express = require('express');
+const router  = express.Router();
+const auth    = require('../middlewares/authMiddleware');
+const role    = require('../middlewares/roleMiddleware');
+const ctrl    = require('../controllers/auditController');
+
+router.get('/dashboard',    auth, ctrl.getDashboard);
+router.get('/search',       auth, role('admin'), ctrl.searchDocuments);
+router.get('/logs',         auth, role('admin'), ctrl.getAllAuditLogs);
+router.get('/:doc_id',      auth, role('admin'), ctrl.getAuditTrail);
+
+module.exports = router;

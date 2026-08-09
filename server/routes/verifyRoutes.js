@@ -1,3 +1,11 @@
-// TODO: Verification & Trust routes (FR-033 to FR-035)
-// GET  /api/verify/:docId     - Public verify by Doc ID (no login required)
-// POST /api/verify/upload     - Public verify by uploading PDF (extract + check hash)
+const express  = require('express');
+const router   = express.Router();
+const multer   = require('multer');
+const ctrl     = require('../controllers/verifyController');
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+router.get('/:doc_uuid',       ctrl.verifyByDocUuid);
+router.post('/upload',  upload.single('pdf'), ctrl.verifyByUpload);
+
+module.exports = router;
