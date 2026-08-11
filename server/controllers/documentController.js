@@ -23,16 +23,22 @@ exports.generateDocument = async (req, res) => {
   if (rows.length === 0) return res.status(404).json({ message: 'Template not found or archived' });
 
   const template = rows[0];
-  const docUuid  = `DOC-${Date.now()}-${uuidv4().slice(0, 6).toUpperCase()}`;
+  const dateStr  = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const safeName = template.name.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+  const docUuid  = `DOC-${dateStr}-${uuidv4().slice(0,6).toUpperCase()}`;
+  const fileName = `${safeName}_${record_identifier||'NOREF'}_${dateStr}.pdf`;
   const verifyBase = process.env.CLIENT_URL || 'http://localhost:5174';
 
   try {
     const { filePath, hash } = await generatePDF(template, data || {}, docUuid, verifyBase, PDF_DIR);
     const relativePath = path.relative(path.join(__dirname, '..'), filePath);
+    const namedPath    = path.join(PDF_DIR, fileName);
+    require('fs').renameSync(filePath, namedPath);
+    const relativeNamed = path.relative(path.join(__dirname, '..'), namedPath);
 
     const [result] = await db.query(
       'INSERT INTO generated_docs (doc_uuid, template_id, generated_by, record_identifier, file_path, file_hash, status, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [docUuid, template_id, req.user.id, record_identifier || null, relativePath, hash, 'draft', JSON.stringify(data || {})]
+      [docUuid, template_id, req.user.id, record_identifier || null, relativeNamed, hash, 'draft', JSON.stringify(data || {})]
     );
 
     await db.query(

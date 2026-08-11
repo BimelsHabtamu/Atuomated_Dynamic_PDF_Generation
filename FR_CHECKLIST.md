@@ -39,7 +39,7 @@
 - [x] FR-015 Unique Document ID — format DOC-YYYYMMDD-XXXXX
 - [x] FR-016 Tamper-proof footer — QR code + SHA-256 hash + Doc ID
 - [x] FR-017 Watermarking — DRAFT / CONFIDENTIAL / FINAL per template config
-- [ ] FR-018 File naming — [TemplateName]_[RecordID]_[Date].pdf
+- [x] FR-018 File naming — [TemplateName]_[RecordID]_[Date].pdf
 - [ ] FR-019 Bulk background job (100+ docs) with real-time progress "45/100 completed"
 
 ---
