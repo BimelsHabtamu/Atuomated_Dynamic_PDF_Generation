@@ -55,13 +55,34 @@ exports.deleteUser = async (req, res) => {
 
 exports.changeRole = async (req, res) => {
   const { role } = req.body;
-  const validRoles = ['admin', 'generator', 'approver', 'recipient'];
+  const validRoles = ['super_admin', 'system_admin', 'generator', 'approver', 'recipient'];
   if (!validRoles.includes(role)) {
     return res.status(400).json({ message: 'Invalid role' });
   }
   try {
     await db.query('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
     res.json({ message: 'Role updated' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) {
+    return res.status(400).json({ message: 'Both current and new password are required' });
+  }
+  if (new_password.length < 6) {
+    return res.status(400).json({ message: 'New password must be at least 6 characters' });
+  }
+  try {
+    const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
+    const valid = await bcrypt.compare(current_password, rows[0].password_hash);
+    if (!valid) return res.status(401).json({ message: 'Current password is incorrect' });
+    const hash = await bcrypt.hash(new_password, 10);
+    await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [hash, req.user.id]);
+    res.json({ message: 'Password changed successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

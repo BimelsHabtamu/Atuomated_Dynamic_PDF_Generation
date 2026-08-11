@@ -12,7 +12,6 @@ const ACTION_COLORS = {
   VERIFY:   { bg: 'bg-yellow-100', text: 'text-yellow-700' },
   PREVIEW:  { bg: 'bg-gray-100',   text: 'text-gray-600'   },
 };
-
 const STATUS_COLORS = {
   draft:     { bar: 'bg-gray-400',    pct: 0 },
   pending:   { bar: 'bg-yellow-400',  pct: 0 },
@@ -20,7 +19,6 @@ const STATUS_COLORS = {
   delivered: { bar: 'bg-emerald-500', pct: 0 },
   rejected:  { bar: 'bg-red-400',     pct: 0 },
 };
-
 function timeAgo(d) {
   const s = Math.floor((Date.now() - new Date(d)) / 1000);
   if (s < 60)    return `${s}s ago`;
@@ -69,24 +67,85 @@ function QuickAction({ label, desc, icon, bg, to, roles, role }) {
 }
 
 const QUICK_ACTIONS = [
-  { label:'Generate Document', desc:'Create a new PDF from a template',   to:'/generate',  bg:'bg-blue-100',   roles:['admin','generator','approver'],
-    icon:<svg className="w-4.5 h-4.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> },
-  { label:'Manage Templates',  desc:'Create, edit or archive templates',  to:'/templates', bg:'bg-indigo-100',  roles:['admin'],
-    icon:<svg className="w-4.5 h-4.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg> },
-  { label:'Pending Approvals', desc:'Review and sign documents',          to:'/approvals', bg:'bg-yellow-100',  roles:['admin','approver'],
-    icon:<svg className="w-4.5 h-4.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> },
-  { label:'Verify Document',   desc:'Check document authenticity via QR', to:'/verify',    bg:'bg-emerald-100', roles:['admin','generator','approver','recipient'],
-    icon:<svg className="w-4.5 h-4.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> },
-  { label:'Manage Users',      desc:'Add, edit or deactivate accounts',   to:'/users',     bg:'bg-purple-100',  roles:['admin'],
-    icon:<svg className="w-4.5 h-4.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> },
-  { label:'View Audit Logs',   desc:'Full forensic event trail',          to:'/audit',     bg:'bg-gray-100',    roles:['admin'],
-    icon:<svg className="w-4.5 h-4.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg> },
+  { 
+    label:'Generate Document',
+     desc:'Create a new PDF from a template',  
+     to:'/generate',  
+     bg:'bg-blue-100', 
+    roles:['admin','generator','approver'],
+    icon:
+    <svg className="w-4.5 h-4.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" 
+     strokeLinejoin="round"
+     strokeWidth={1.8} 
+     d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+     </svg>
+      },
+  { 
+    label:'Manage Templates',  
+    desc:'Create, edit or archive templates',  
+    to:'/templates', bg:'bg-indigo-100',  
+    roles:['admin'],
+    icon:
+    <svg className="w-4.5 h-4.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} 
+    d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+    </svg>
+     },
+  { 
+    label:'Pending Approvals', 
+    desc:'Review and sign documents', 
+    to:'/approvals', 
+    bg:'bg-yellow-100', 
+    roles:['admin','approver'],
+    icon:
+    <svg className="w-4.5 h-4.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} 
+    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg> 
+    },
+  { 
+    label:'Verify Document',
+    desc:'Check document authenticity via QR', 
+    to:'/verify', 
+    bg:'bg-emerald-100', 
+    roles:['admin','generator','approver','recipient'],
+    icon:
+    <svg className="w-4.5 h-4.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} 
+    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+    </svg>
+     },
+  { 
+    label:'Manage Users',
+    desc:'Add, edit or deactivate accounts',
+    to:'/users',
+    bg:'bg-purple-100', 
+    roles:['admin'],
+    icon:
+    <svg className="w-4.5 h-4.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} 
+    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+    </svg> 
+    },
+  {
+    label:'View Audit Logs',
+    desc:'Full forensic event trail',
+    to:'/audit',  
+    bg:'bg-gray-100',
+    roles:['admin'],
+    icon:
+    <svg className="w-4.5 h-4.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} 
+    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+    </svg> 
+    },
 ];
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const toast    = useToast();
-  const [data, setData]       = useState(null);
+  const [data, setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const role = user?.role;
 
@@ -101,9 +160,7 @@ export default function DashboardPage() {
   const delivTotal  = data?.delivery_stats?.reduce((s,r)  => s + Number(r.count), 0) || 0;
 
   return (
-    <div className="space-y-6">
-
-      {/* Header */}
+    <div className="space-y-6">     
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -115,53 +172,55 @@ export default function DashboardPage() {
             {new Date().toLocaleDateString('en-US', { weekday:'short', month:'long', day:'numeric', year:'numeric' })}
           </p>
         </div>
-        <span className="self-start sm:self-auto flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg">
-          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-          Live Data
-        </span>
-      </div>
-
-      {/* KPI cards */}
+      </div>      
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {loading ? [1,2,3,4].map(i => <SkeletonCard key={i} />) : (<>
-          <KpiCard label="Docs Generated Today" value={data?.docs_today ?? 0}
-            sub={role==='admin' ? 'System-wide' : 'Your documents'}
-            border="border-blue-500" iconBg="bg-blue-50"
-            trend={`Total in system: ${data?.total_docs ?? 0}`}
-            icon={<svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>} />
+          <KpiCard label="Docs Generated Today" value={data?.docs_today ?? 0}    
+            border="border-blue-500" iconBg="bg-blue-50"            
+            icon={
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          } />
+
           {(role==='admin'||role==='approver') && (
             <KpiCard label="Pending Approvals" value={data?.pending_approvals ?? 0}
-              sub={role==='approver' ? 'Assigned to you' : 'System-wide'}
               border="border-yellow-500" iconBg="bg-yellow-50"
-              trend={data?.avg_approval_minutes ? `Avg sign time: ${data.avg_approval_minutes}m` : 'No approvals yet'}
-              icon={<svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>} />
+              icon={
+              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} 
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              } />
           )}
           {(role==='admin'||role==='generator') && (
             <KpiCard label="Total Documents" value={data?.total_docs ?? 0}
-              sub={role==='admin' ? 'All time · all users' : 'Your documents'}
               border="border-indigo-500" iconBg="bg-indigo-50"
-              trend="Across all templates"
-              icon={<svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>} />
+              icon={
+              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+               d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+               </svg>
+               } />
           )}
           {role==='admin' && (
             <KpiCard label="Active Users" value={data?.active_users ?? 0}
-              sub="Enabled accounts"
               border="border-emerald-500" iconBg="bg-emerald-50"
-              trend="All roles combined"
-              icon={<svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>} />
+              icon={
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} 
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+              } />
           )}
         </>)}
-      </div>
-
-      {/* Main content row */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-
-        {/* Activity Timeline */}
+      </div>      
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">        
         <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <div>
               <p className="text-sm font-bold text-gray-900">Activity Timeline</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">Last 8 events from audit_logs</p>
             </div>
             <a href="/audit" className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1">
               Full log <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>

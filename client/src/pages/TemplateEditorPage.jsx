@@ -1,42 +1,102 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import { useForm } from 'react-hook-form';
+import {
+  BoldIcon, ItalicIcon, UnderlineIcon, ListBulletIcon,
+  TableCellsIcon, PhotoIcon, ChevronDownIcon,
+  CheckCircleIcon, ArrowLeftIcon, MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import axiosInstance from '../api/axiosInstance';
-import { useToast }  from '../context/ToastContext';
+import { useToast } from '../context/ToastContext';
 
-const CATEGORIES  = ['HR', 'Finance', 'Academic', 'Procurement', 'General'];
-const WATERMARKS  = ['', 'DRAFT', 'CONFIDENTIAL', 'FINAL'];
+const CATEGORIES = ['HR','Finance','Academic','Procurement','General'];
+const WATERMARKS = ['','DRAFT','CONFIDENTIAL','FINAL'];
 
-const COMMON_PLACEHOLDERS = [
-  { label: 'Employee Name',  tag: '{{employee_name}}' },
-  { label: 'Employee ID',    tag: '{{employee_id}}' },
-  { label: 'Department',     tag: '{{department}}' },
-  { label: 'Salary',         tag: '{{salary}}' },
-  { label: 'Company Name',   tag: '{{company_name}}' },
-  { label: 'Date',           tag: '{{generation_date}}' },
-  { label: 'Student Name',   tag: '{{student_name}}' },
-  { label: 'GPA',            tag: '{{gpa}}' },
-  { label: 'Supplier Name',  tag: '{{supplier_name}}' },
-  { label: 'Amount',         tag: '{{amount}}' },
-  { label: 'Recipient',      tag: '{{recipient}}' },
-  { label: 'Subject',        tag: '{{subject}}' },
-];
+const SAMPLE = {
+  'users.full_name':'Sara Ahmed','users.email':'sara@company.com',
+  'users.department':'HR','generated_docs.doc_uuid':'DOC-20260811-A1B2',
+  generation_date: new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),
+  effective_date:  new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),
+};
 
-function renderPreview(html, sampleData) {
+function renderPreview(html) {
   if (!html) return '';
-  let result = html;
-  Object.entries(sampleData).forEach(([key, val]) => {
-    result = result.replace(new RegExp(`{{${key}}}`, 'g'), `<span style="background:#dbeafe;color:#1d4ed8;padding:0 3px;border-radius:3px;font-weight:600">${val}</span>`);
+  let r = html;
+  Object.entries(SAMPLE).forEach(([k,v]) => {
+    r = r.replace(new RegExp(`{{${k.replace('.','\\.')}}}`, 'g'),
+      `<mark style="background:#dbeafe;color:#1e40af;padding:1px 5px;border-radius:4px;font-weight:600">${v}</mark>`);
   });
-  result = result.replace(/{{(\w+)}}/g, '<span style="background:#fef3c7;color:#92400e;padding:0 3px;border-radius:3px">{{$1}}</span>');
-  return result;
+  r = r.replace(/{{#if\s+.+?}}([\s\S]*?){{\/if}}/g,
+    '<div style="background:#f0fdf4;border-left:3px solid #16a34a;padding:6px 10px;margin:4px 0;border-radius:0 4px 4px 0">$1</div>');
+  r = r.replace(/{{#each\s+(\w+)}}([\s\S]*?){{\/each}}/g,
+    '<div style="background:#fff7ed;border-left:3px solid #ea580c;padding:6px 10px;margin:4px 0"><em style="font-size:10px;color:#ea580c">LOOP ($1):</em> $2</div>');
+  r = r.replace(/{{[\w.]+}}/g, m =>
+    `<mark style="background:#fef9c3;color:#854d0e;padding:1px 5px;border-radius:4px">${m}</mark>`);
+  return r;
 }
 
-const SAMPLE_DATA = {
-  employee_name: 'Sara Ahmed', employee_id: 'EMP-001', department: 'Finance',
-  salary: '5,000 ETB', company_name: 'Acme Corp', generation_date: new Date().toLocaleDateString(),
-  student_name: 'Liya Tesfaye', gpa: '3.85', supplier_name: 'TechSupply Ltd',
-  amount: '25,000 ETB', recipient: 'All Staff', subject: 'Q3 Update',
-};
+function ToolBtn({ onClick, active, title, children }) {
+  return (
+    <button type="button" onClick={onClick} title={title}
+      className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${active?'bg-gray-800 text-white':'text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}>
+      {children}
+    </button>
+  );
+}
+
+function EditorToolbar({ editor, onInsert }) {
+  if (!editor) return null;
+  return (
+    <div className="flex items-center gap-0.5 px-3 py-2 bg-white border-b border-gray-100 flex-wrap">
+      <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
+        <BoldIcon className="w-3.5 h-3.5"/>
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Italic">
+        <ItalicIcon className="w-3.5 h-3.5"/>
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Strike">
+        <span className="text-xs font-bold line-through">S</span>
+      </ToolBtn>
+      <div className="w-px h-5 bg-gray-200 mx-1"/>
+      <ToolBtn onClick={() => editor.chain().focus().toggleHeading({level:1}).run()} active={editor.isActive('heading',{level:1})} title="Heading 1">
+        <span className="text-[11px] font-black">H1</span>
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().toggleHeading({level:2}).run()} active={editor.isActive('heading',{level:2})} title="Heading 2">
+        <span className="text-[11px] font-black">H2</span>
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive('paragraph')} title="Paragraph">
+        <span className="text-[11px] font-bold">P</span>
+      </ToolBtn>
+      <div className="w-px h-5 bg-gray-200 mx-1"/>
+      <ToolBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Bullet List">
+        <ListBulletIcon className="w-3.5 h-3.5"/>
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="Ordered List">
+        <span className="text-[11px] font-bold">1.</span>
+      </ToolBtn>
+      <div className="w-px h-5 bg-gray-200 mx-1"/>
+      <ToolBtn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Quote">
+        <span className="text-[11px] font-bold">"</span>
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider">
+        <span className="text-[11px] font-bold">—</span>
+      </ToolBtn>
+      <div className="w-px h-5 bg-gray-200 mx-1"/>
+      <ToolBtn onClick={() => onInsert('{{#if condition}}\n  content\n{{/if}}')} title="Conditional block">
+        <span className="text-[10px] font-bold text-emerald-600">#if</span>
+      </ToolBtn>
+      <ToolBtn onClick={() => onInsert('{{#each items}}\n  {{this.field}}\n{{/each}}')} title="Loop block">
+        <span className="text-[10px] font-bold text-orange-500">loop</span>
+      </ToolBtn>
+      <ToolBtn onClick={() => onInsert('{{generation_date}}')} title="Generation date">
+        <span className="text-[10px] font-bold text-purple-600">date</span>
+      </ToolBtn>
+    </div>
+  );
+}
 
 export default function TemplateEditorPage() {
   const { id }   = useParams();
@@ -44,224 +104,304 @@ export default function TemplateEditorPage() {
   const toast    = useToast();
   const isEdit   = Boolean(id);
 
-  const [form, setForm] = useState({
-    name: '', category: 'HR', watermark_text: '',
-    header_html: '', body_html: '', footer_html: '',
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+    defaultValues: { name:'', description:'', category:'HR', watermark_text:'', is_active:true }
   });
-  const [activeTab, setActiveTab]   = useState('body');
-  const [showPreview, setPreview]   = useState(true);
+
+  const [section, setSection]       = useState('body');
+  const [rightTab, setRightTab]     = useState('fields');
+  const [schema, setSchema]         = useState({});
+  const [openTables, setOpenTables] = useState({});
+  const [fieldSearch, setSearch]    = useState('');
+  const [logo, setLogo]             = useState(null);
+  const [logoPreview, setLogoPrev]  = useState('');
   const [saving, setSaving]         = useState(false);
+  const [saved, setSaved]           = useState(false);
   const [loading, setLoading]       = useState(isEdit);
-  const bodyRef = useRef(null);
+  const [bodyHtml, setBodyHtml]     = useState('');
+  const [headerHtml, setHeaderHtml] = useState('');
+  const [footerHtml, setFooterHtml] = useState('');
 
-  useEffect(() => {
-    if (!isEdit) return;
-    axiosInstance.get(`/templates/${id}`)
-      .then(res => {
-        const t = res.data;
-        setForm({ name: t.name, category: t.category, watermark_text: t.watermark_text || '', header_html: t.header_html || '', body_html: t.body_html || '', footer_html: t.footer_html || '' });
-      })
-      .catch(() => toast.error('Failed to load template'))
-      .finally(() => setLoading(false));
-  }, [id, isEdit]);
-
-  const insertPlaceholder = (tag) => {
-    const field = activeTab + '_html';
-    const el    = document.querySelector(`textarea[data-field="${field}"]`);
-    if (!el) {
-      setForm(f => ({ ...f, [field]: (f[field] || '') + tag }));
-      return;
-    }
-    const start = el.selectionStart;
-    const end   = el.selectionEnd;
-    const current = form[field] || '';
-    const updated = current.slice(0, start) + tag + current.slice(end);
-    setForm(f => ({ ...f, [field]: updated }));
-    setTimeout(() => { el.focus(); el.setSelectionRange(start + tag.length, start + tag.length); }, 0);
+  const editors = {
+    body:   useEditor({ extensions: [StarterKit, Placeholder.configure({placeholder:'Start writing your document body here...'})], onUpdate: ({editor}) => setBodyHtml(editor.getHTML()) }),
+    header: useEditor({ extensions: [StarterKit, Placeholder.configure({placeholder:'Optional header content...'})],               onUpdate: ({editor}) => setHeaderHtml(editor.getHTML()) }),
+    footer: useEditor({ extensions: [StarterKit, Placeholder.configure({placeholder:'Optional footer content...'})],               onUpdate: ({editor}) => setFooterHtml(editor.getHTML()) }),
   };
 
-  const handleSave = async () => {
-    if (!form.name.trim())      { toast.error('Template name is required'); return; }
-    if (!form.body_html.trim()) { toast.error('Body HTML is required');     return; }
+  const activeEditor = editors[section];
+
+  const insertPlaceholder = useCallback((tag) => {
+    if (!activeEditor) return;
+    activeEditor.chain().focus().insertContent(tag).run();
+    setSaved(true); setTimeout(() => setSaved(false), 2000);
+  }, [activeEditor]);
+
+  useEffect(() => {
+    axiosInstance.get('/templates/schema').then(r => {
+      setSchema(r.data);
+      const first = Object.keys(r.data)[0];
+      if (first) setOpenTables({ [first]: true });
+    }).catch(() => {});
+
+    if (!isEdit) return;
+    axiosInstance.get(`/templates/${id}`).then(res => {
+      const t = res.data;
+      setValue('name',           t.name||'');
+      setValue('description',    t.description||'');
+      setValue('category',       t.category||'HR');
+      setValue('watermark_text', t.watermark_text||'');
+      setValue('is_active',      !!t.is_active);
+      if (t.header_html && editors.header) { editors.header.commands.setContent(t.header_html); setHeaderHtml(t.header_html); }
+      if (t.body_html   && editors.body)   { editors.body.commands.setContent(t.body_html);     setBodyHtml(t.body_html); }
+      if (t.footer_html && editors.footer) { editors.footer.commands.setContent(t.footer_html); setFooterHtml(t.footer_html); }
+      if (t.logo_path) setLogoPrev(`http://localhost:5000/${t.logo_path}`);
+    }).catch(() => toast.error('Failed to load')).finally(() => setLoading(false));
+  }, [id, isEdit]);
+
+  const onSubmit = async (data, activate = false) => {
+    if (!bodyHtml || bodyHtml === '<p></p>') { toast.error('Body content is required'); return; }
     setSaving(true);
     try {
-      if (isEdit) { await axiosInstance.put(`/templates/${id}`, form); toast.success('Template updated — new version saved'); }
-      else        { await axiosInstance.post('/templates', form);       toast.success('Template created successfully'); }
+      const payload = { ...data, is_active: activate ? true : data.is_active, header_html: headerHtml, body_html: bodyHtml, footer_html: footerHtml };
+      let savedId = id;
+      if (isEdit) { await axiosInstance.put(`/templates/${id}`, payload); toast.success('Saved — new version created'); }
+      else { const r = await axiosInstance.post('/templates', payload); savedId = r.data.id; toast.success('Template created'); }
+      if (logo && savedId) {
+        const fd = new FormData(); fd.append('logo', logo);
+        await axiosInstance.post(`/templates/${savedId}/logo`, fd, { headers:{ 'Content-Type':'multipart/form-data' } });
+      }
       navigate('/templates');
     } catch (e) { toast.error(e.response?.data?.message || 'Save failed'); }
     finally { setSaving(false); }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <svg className="animate-spin w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-      </div>
-    );
-  }
+  const filteredSchema = Object.entries(schema).reduce((acc,[table,fields]) => {
+    const q = fieldSearch.toLowerCase();
+    const f = fields.filter(f => f.field.toLowerCase().includes(q)||f.placeholder.toLowerCase().includes(q));
+    if (f.length) acc[table] = f;
+    return acc;
+  }, {});
 
-  const currentField = activeTab + '_html';
-  const previewHtml  = `
-    <div style="font-family:Arial,sans-serif;color:#111;padding:0">
-      ${form.header_html ? `<div style="border-bottom:2px solid #3b82f6;padding-bottom:12px;margin-bottom:16px">${renderPreview(form.header_html, SAMPLE_DATA)}</div>` : ''}
-      <div>${renderPreview(form.body_html, SAMPLE_DATA)}</div>
-      ${form.footer_html ? `<div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-top:16px;font-size:12px;color:#888">${renderPreview(form.footer_html, SAMPLE_DATA)}</div>` : ''}
-    </div>
-  `;
+  const watchedWatermark = watch('watermark_text');
+  const previewContent   = `<div style="font-family:Inter,Arial,sans-serif;font-size:12.5px;color:#111;line-height:1.75">
+    ${logoPreview?`<img src="${logoPreview}" style="max-height:48px;object-fit:contain;margin-bottom:12px" alt="logo"/>`:''}
+    ${headerHtml&&headerHtml!=='<p></p>'?`<div style="border-bottom:2px solid #1d4ed8;padding-bottom:10px;margin-bottom:14px">${renderPreview(headerHtml)}</div>`:''}
+    <div>${renderPreview(bodyHtml)}</div>
+    ${footerHtml&&footerHtml!=='<p></p>'?`<div style="border-top:1px solid #e5e7eb;margin-top:16px;padding-top:10px;font-size:11px;color:#6b7280">${renderPreview(footerHtml)}</div>`:''}
+  </div>`;
+
+  if (loading) return <div className="flex items-center justify-center h-[60vh]"><svg className="animate-spin w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>;
 
   return (
-    <div className="space-y-4 h-full">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isEdit ? 'Edit Template' : 'New Template'}</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{isEdit ? `Editing — saving creates version v${form.version + 1 || 'next'}` : 'Design your document layout with live preview'}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setPreview(p => !p)}
-            className={`flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl border transition-colors ${showPreview ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200'}`}>
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-            {showPreview ? 'Hide Preview' : 'Show Preview'}
+    <form onSubmit={handleSubmit(d => onSubmit(d, false))} className="flex flex-col overflow-hidden" style={{height:'calc(100vh - 64px)'}}>
+
+      {/* Top bar */}
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 bg-white border-b border-gray-100 gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <button type="button" onClick={() => navigate('/templates')} className="text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0">
+            <ArrowLeftIcon className="w-4 h-4"/>
           </button>
-          <button onClick={() => navigate('/templates')} className="text-xs font-medium text-gray-600 px-3.5 py-2 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">Cancel</button>
-          <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl disabled:opacity-50 transition-colors shadow-sm shadow-blue-600/20">
-            {saving ? <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Saving...</> : <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>{isEdit ? 'Save Changes' : 'Create Template'}</>}
+          <span className="text-sm text-gray-400 hidden sm:inline">Templates</span>
+          <span className="text-gray-300 hidden sm:inline">/</span>
+          <span className="text-sm font-semibold text-gray-800 truncate">{watch('name') || (isEdit?'Edit Template':'Create Template')}</span>
+          {saved && <span className="flex items-center gap-1 text-xs text-emerald-500 font-medium flex-shrink-0"><CheckCircleIcon className="w-3.5 h-3.5"/>Saved</span>}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button type="button" onClick={() => navigate('/templates')} className="text-sm text-gray-600 px-3.5 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button type="submit" disabled={saving} className="text-sm font-semibold text-gray-700 px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            {saving ? 'Saving...' : 'Save Draft'}
+          </button>
+          <button type="button" disabled={saving} onClick={handleSubmit(d => onSubmit(d, true))}
+            className="flex items-center gap-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl disabled:opacity-50 transition-colors shadow-sm shadow-blue-600/20">
+            <CheckCircleIcon className="w-4 h-4"/>Activate
           </button>
         </div>
       </div>
 
-      {/* Meta fields */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-1">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Template Name *</label>
-            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Monthly Payslip"
-              className={`w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition ${!form.name.trim() ? 'border-gray-200' : 'border-gray-200'}`} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category *</label>
-            <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white">
-              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Watermark</label>
-            <select value={form.watermark_text} onChange={e => setForm(f => ({ ...f, watermark_text: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white">
-              {WATERMARKS.map(w => <option key={w} value={w}>{w || 'None'}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
+      {/* 2-column layout */}
+      <div className="flex-1 flex overflow-hidden">
 
-      {/* Main editor area */}
-      <div className={`grid gap-4 ${showPreview ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`} style={{ minHeight: '480px' }}>
+        {/* LEFT: Editor */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
 
-        {/* Editor pane */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+          {/* Meta */}
+          <div className="flex-shrink-0 bg-white border-b border-gray-100 px-6 py-3">
+            <div className="grid grid-cols-12 gap-3 items-end">
+              <div className="col-span-4">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Template Name *</label>
+                <input {...register('name',{required:true})} placeholder="e.g. Employee Salary Slip"
+                  className={`w-full h-9 px-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition ${errors.name?'border-red-400':'border-gray-200 focus:border-blue-400'}`}/>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category</label>
+                <select {...register('category')} className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white">
+                  {CATEGORIES.map(c=><option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                <input {...register('description')} placeholder="What is this template used for?"
+                  className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition"/>
+              </div>
+              <div className="col-span-1">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Watermark</label>
+                <select {...register('watermark_text')} className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white">
+                  {WATERMARKS.map(w=><option key={w} value={w}>{w||'None'}</option>)}
+                </select>
+              </div>
+              <div className="col-span-1 flex items-center gap-2 pb-1">
+                <input type="checkbox" {...register('is_active')} id="is_active" className="accent-blue-600 rounded"/>
+                <label htmlFor="is_active" className="text-xs text-gray-600 cursor-pointer">Active</label>
+              </div>
+            </div>
+          </div>
+
           {/* Section tabs */}
-          <div className="flex border-b border-gray-100 bg-gray-50/50">
-            {[['header', 'Header'], ['body', 'Body *'], ['footer', 'Footer']].map(([key, label]) => (
-              <button key={key} onClick={() => setActiveTab(key)}
-                className={`flex-1 py-3 text-xs font-semibold transition-colors relative ${activeTab === key ? 'text-blue-600 bg-white' : 'text-gray-500 hover:text-gray-700'}`}>
+          <div className="flex-shrink-0 flex bg-white border-b border-gray-100">
+            {[['header','Header'],['body','Body *'],['footer','Footer']].map(([key,label]) => (
+              <button key={key} type="button" onClick={() => setSection(key)}
+                className={`px-5 py-3 text-xs font-semibold transition-colors relative ${section===key?'text-blue-600 bg-blue-50/30':'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
                 {label}
-                {activeTab === key && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                {section===key && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500"/>}
               </button>
             ))}
           </div>
 
-          {/* Placeholder toolbar */}
-          <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/30">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">Insert:</span>
-              {COMMON_PLACEHOLDERS.map(ph => (
-                <button key={ph.tag} onClick={() => insertPlaceholder(ph.tag)}
-                  className="text-[10px] font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/60 px-2 py-0.5 rounded transition-colors">
-                  {ph.label}
-                </button>
-              ))}
-            </div>
+          {/* Tiptap toolbar */}
+          <EditorToolbar editor={activeEditor} onInsert={insertPlaceholder}/>
+
+          {/* Tiptap editor */}
+          <div className="flex-1 overflow-y-auto bg-white">
+            <style>{`.ProseMirror{min-height:100%;outline:none;padding:24px;font-family:Inter,Arial,sans-serif;font-size:14px;line-height:1.75;color:#1a1a1a}.ProseMirror p.is-editor-empty:first-child::before{content:attr(data-placeholder);float:left;color:#9ca3af;pointer-events:none;height:0}.ProseMirror h1{font-size:22px;font-weight:700;margin:0 0 8px}.ProseMirror h2{font-size:18px;font-weight:600;margin:0 0 6px}.ProseMirror ul,.ProseMirror ol{padding-left:24px;margin:8px 0}.ProseMirror blockquote{border-left:3px solid #e5e7eb;padding-left:12px;color:#6b7280;margin:8px 0}.ProseMirror hr{border:none;border-top:1px solid #e5e7eb;margin:16px 0}`}</style>
+            {['header','body','footer'].map(s => (
+              <div key={s} style={{display: section===s?'block':'none'}} className="h-full">
+                <EditorContent editor={editors[s]}/>
+              </div>
+            ))}
           </div>
 
-          {/* Textarea */}
-          <div className="flex-1 p-4">
-            <textarea
-              data-field={currentField}
-              value={form[currentField]}
-              onChange={e => setForm(f => ({ ...f, [currentField]: e.target.value }))}
-              placeholder={
-                activeTab === 'header' ? '<h1>{{company_name}}</h1>' :
-                activeTab === 'body'   ? '<p>Dear {{employee_name}},</p>\n<p>Your salary for this month is <strong>{{salary}}</strong>.</p>' :
-                '<p>Generated on {{generation_date}}</p>'
-              }
-              className="w-full h-full min-h-[320px] resize-none font-mono text-xs text-gray-700 bg-transparent focus:outline-none leading-relaxed"
-            />
-          </div>
-
-          {/* Bottom hint */}
-          <div className="px-4 py-2.5 border-t border-gray-100 bg-gray-50/30 flex items-center justify-between">
-            <p className="text-[10px] text-gray-400">HTML supported · Click any placeholder button above to insert</p>
-            <span className="text-[10px] text-gray-400">{(form[currentField] || '').length} chars</span>
+          {/* Logo upload bottom bar */}
+          <div className="flex-shrink-0 bg-white border-t border-gray-100 px-6 py-2.5 flex items-center gap-4">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Logo (FR-008)</span>
+            {logoPreview
+              ? <div className="flex items-center gap-2"><img src={logoPreview} alt="logo" className="h-7 rounded"/><button type="button" onClick={() => {setLogo(null);setLogoPrev('');}} className="text-[10px] text-red-500 hover:text-red-700">Remove</button></div>
+              : <input type="file" accept="image/*" onChange={e => { const f=e.target.files[0]; if(f){setLogo(f);setLogoPrev(URL.createObjectURL(f));} }}
+                  className="text-[11px] text-gray-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 file:font-medium file:text-[11px] hover:file:bg-gray-200"/>
+            }
+            <span className="ml-auto text-[10px] text-gray-400">FR-001 to FR-008 · Tiptap editor</span>
           </div>
         </div>
 
-        {/* Preview pane */}
-        {showPreview && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50/50">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                <span className="ml-2 text-xs font-semibold text-gray-500">Live Preview</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                <span className="text-[10px] text-blue-500 font-medium">Updates as you type</span>
-              </div>
-            </div>
+        {/* RIGHT: Fields + Preview */}
+        <div className="w-[380px] flex-shrink-0 flex flex-col overflow-hidden bg-white border-l border-gray-100">
+          <div className="flex-shrink-0 flex border-b border-gray-100">
+            {[['fields','Fields'],['preview','Preview']].map(([k,l]) => (
+              <button key={k} type="button" onClick={() => setRightTab(k)}
+                className={`flex-1 py-3 text-xs font-semibold transition-colors relative ${rightTab===k?'text-gray-900 bg-white':'text-gray-400 hover:text-gray-600 bg-gray-50'}`}>
+                {l}{rightTab===k && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gray-900"/>}
+              </button>
+            ))}
+          </div>
 
-            {/* A4-like preview */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-100">
-              <div className="bg-white shadow-md rounded-sm mx-auto max-w-[560px] min-h-[700px] p-10 relative">
-                {form.watermark_text && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-sm">
-                    <span className="text-6xl font-black text-gray-200 opacity-40 rotate-[-35deg] select-none tracking-widest">
-                      {form.watermark_text}
-                    </span>
+          {/* Fields panel */}
+          {rightTab==='fields' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400"/>
+                  <input value={fieldSearch} onChange={e => setSearch(e.target.value)} placeholder="Search fields..."
+                    className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition"/>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Special Blocks</p>
+                  <div className="space-y-1.5">
+                    {[
+                      {label:'Conditional (FR-004)', tag:'{{#if condition}}\n  content\n{{/if}}',        color:'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'},
+                      {label:'Loop/Repeater (FR-005)',tag:'{{#each items}}\n  {{this.field}}\n{{/each}}', color:'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'},
+                      {label:'Generation Date',       tag:'{{generation_date}}',                         color:'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'},
+                      {label:'Effective Date',        tag:'{{effective_date}}',                          color:'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'},
+                    ].map(b => (
+                      <button key={b.label} type="button" onClick={() => insertPlaceholder(b.tag)}
+                        className={`w-full text-left text-[11px] font-semibold px-3 py-2 rounded-lg border transition-colors ${b.color}`}>
+                        + {b.label}
+                      </button>
+                    ))}
                   </div>
-                )}
-                {!form.body_html && !form.header_html ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center py-16">
-                    <svg className="w-10 h-10 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <p className="text-sm text-gray-400">Start typing HTML in the editor</p>
-                    <p className="text-xs text-gray-300 mt-1">Preview updates live as you write</p>
-                  </div>
-                ) : (
-                  <div dangerouslySetInnerHTML={{ __html: previewHtml }} className="text-sm leading-relaxed" />
-                )}
-                <div className="absolute bottom-4 left-10 right-10 flex items-end justify-between">
-                  <div className="space-y-0.5">
-                    <div className="text-[9px] text-gray-400">Doc ID: DOC-PREVIEW-XXXX</div>
-                    <div className="text-[9px] text-blue-400 underline">Verify at: docuvault.app/verify</div>
-                  </div>
-                  <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-[8px] text-gray-400">QR</div>
+                </div>
+                <div className="h-px bg-gray-100"/>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Database Fields (FR-003)</p>
+                  {Object.entries(filteredSchema).map(([table,fields]) => (
+                    <div key={table} className="mb-2">
+                      <button type="button" onClick={() => setOpenTables(o=>({...o,[table]:!o[table]}))}
+                        className="flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                        <span className="capitalize">{table.replace(/_/g,' ')}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded">{fields.length}</span>
+                          <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${openTables[table]?'rotate-180':''}`}/>
+                        </div>
+                      </button>
+                      {openTables[table] && (
+                        <div className="mt-1 space-y-0.5 pl-2">
+                          {fields.map(f => (
+                            <button key={f.field} type="button" onClick={() => insertPlaceholder(f.placeholder)}
+                              className="flex items-center justify-between w-full px-3 py-1.5 text-left hover:bg-blue-50 rounded-lg transition-colors group">
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-gray-700 group-hover:text-blue-700 truncate capitalize">{f.field.replace(/_/g,' ')}</p>
+                                <p className="text-[10px] text-gray-400 font-mono truncate">{f.placeholder}</p>
+                              </div>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ml-1 flex-shrink-0 ${f.type==='int'||f.type==='decimal'||f.type==='bigint'?'bg-blue-100 text-blue-600':f.type.includes('date')?'bg-purple-100 text-purple-600':'bg-gray-100 text-gray-500'}`}>{f.type}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Sample data note */}
-            <div className="px-5 py-2.5 border-t border-gray-100 bg-gray-50/50">
-              <p className="text-[10px] text-gray-400 text-center">
-                <span className="text-blue-500 font-medium">Blue</span> = filled placeholders &nbsp;·&nbsp;
-                <span className="text-yellow-600 font-medium">Yellow</span> = unfilled placeholders &nbsp;·&nbsp; Using sample data
-              </p>
+          {/* Preview panel */}
+          {rightTab==='preview' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
+                <div className="bg-white shadow-md rounded-sm mx-auto relative" style={{maxWidth:'340px',minHeight:'480px',padding:'24px 28px 60px'}}>
+                  {watchedWatermark && (
+                    <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',pointerEvents:'none'}}>
+                      <span style={{fontSize:'44px',fontWeight:900,color:'#e5e7eb',transform:'rotate(-35deg)',userSelect:'none',opacity:0.6,letterSpacing:'4px'}}>{watchedWatermark}</span>
+                    </div>
+                  )}
+                  {!bodyHtml || bodyHtml==='<p></p>'
+                    ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'380px',textAlign:'center',color:'#9ca3af'}}>
+                        <TableCellsIcon style={{width:'40px',height:'40px',marginBottom:'10px',opacity:0.4}}/>
+                        <p style={{fontSize:'13px'}}>Start writing to see preview</p>
+                      </div>
+                    : <div dangerouslySetInnerHTML={{__html:previewContent}}/>
+                  }
+                  <div style={{position:'absolute',bottom:'8px',left:'20px',right:'20px',display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
+                    <div style={{fontSize:'8px',color:'#9ca3af'}}><div>Doc ID: DOC-PREVIEW-XXXX</div><div style={{color:'#93c5fd'}}>docuvault.app/verify</div></div>
+                    <div style={{width:'30px',height:'30px',background:'#f3f4f6',borderRadius:'3px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'8px',color:'#9ca3af'}}>QR</div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-shrink-0 bg-white border-t border-gray-100 p-3 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {[{c:'bg-blue-200',l:'Filled'},{c:'bg-yellow-200',l:'Unfilled'},{c:'bg-emerald-200',l:'If block'},{c:'bg-orange-200',l:'Loop'}].map(x=>(
+                    <div key={x.l} className="flex items-center gap-1"><div className={`w-2.5 h-2.5 rounded-sm ${x.c}`}/><span className="text-[10px] text-gray-500">{x.l}</span></div>
+                  ))}
+                </div>
+                <button type="button" onClick={() => { const w=window.open('','_blank'); w.document.write(`<html><body style="padding:40px;font-family:Arial">${previewContent}</body></html>`); w.print(); }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl border border-gray-200 transition-colors">
+                  <PhotoIcon className="w-4 h-4"/>Print / Download Preview
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </form>
   );
 }

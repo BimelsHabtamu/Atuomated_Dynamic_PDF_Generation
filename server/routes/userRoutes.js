@@ -1,15 +1,16 @@
-const express    = require('express');
-const router     = express.Router();
-const auth       = require('../middlewares/authMiddleware');
-const role       = require('../middlewares/roleMiddleware');
-const ctrl       = require('../controllers/userController');
+const express = require('express');
+const router  = express.Router();
+const auth    = require('../middlewares/authMiddleware');
+const role    = require('../middlewares/roleMiddleware');
+const ctrl    = require('../controllers/userController');
 
-const adminOnly  = [auth, role('admin')];
+const admins = role('super_admin', 'system_admin');
 
-router.get('/',         ...adminOnly, ctrl.getUsers);
-router.post('/',        ...adminOnly, ctrl.createUser);
-router.put('/:id',      ...adminOnly, ctrl.updateUser);
-router.delete('/:id',   ...adminOnly, ctrl.deleteUser);
-router.patch('/:id/role', ...adminOnly, ctrl.changeRole);
+router.get('/',           auth, admins, ctrl.getUsers);
+router.post('/',          auth, admins, ctrl.createUser);
+router.put('/:id',        auth, admins, ctrl.updateUser);
+router.delete('/:id',     auth, admins, ctrl.deleteUser);
+router.patch('/:id/role', auth, admins, ctrl.changeRole);
+router.post('/change-password', auth, ctrl.changePassword);
 
 module.exports = router;

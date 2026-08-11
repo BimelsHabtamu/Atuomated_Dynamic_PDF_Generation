@@ -4,9 +4,11 @@ const auth    = require('../middlewares/authMiddleware');
 const role    = require('../middlewares/roleMiddleware');
 const ctrl    = require('../controllers/auditController');
 
-router.get('/dashboard',    auth, ctrl.getDashboard);
-router.get('/search',       auth, role('admin'), ctrl.searchDocuments);
-router.get('/logs',         auth, role('admin'), ctrl.getAllAuditLogs);
-router.get('/:doc_id',      auth, role('admin'), ctrl.getAuditTrail);
+const admins = role('super_admin', 'system_admin');
+
+router.get('/dashboard', auth,        ctrl.getDashboard);
+router.get('/logs',      auth, admins, ctrl.getAllAuditLogs);
+router.get('/search',    auth, admins, ctrl.searchDocuments);
+router.get('/:doc_id',   auth, admins, ctrl.getAuditTrail);
 
 module.exports = router;

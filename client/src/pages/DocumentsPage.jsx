@@ -190,7 +190,6 @@ export default function DocumentsPage() {
         </div>
         <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
           <p className="text-xs text-gray-400">Showing {filtered.length} of {docs.length} documents</p>
-          <p className="text-xs text-emerald-600 font-medium">● Live from database</p>
         </div>
       </div>
 
