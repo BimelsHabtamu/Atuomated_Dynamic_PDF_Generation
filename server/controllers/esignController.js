@@ -1,7 +1,7 @@
 const db                = require('../config/db');
 const bcrypt            = require('bcryptjs');
 const crypto            = require('crypto');
-const { sendOtpEmail, sendRejectionEmail } = require('../services/emailService');
+const { sendOtpEmail, sendDocReadyEmail, sendDocSignedEmail, sendDocRejectedEmail } = require('../services/emailService');
 const { computeHMAC }   = require('../services/pdfService');
 
 exports.requestSignature = async (req, res) => {
@@ -25,6 +25,10 @@ exports.requestSignature = async (req, res) => {
     'INSERT INTO audit_logs (user_id, doc_id, action, action_details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
     [req.user.id, doc_id, 'SIGN', JSON.stringify({ step: 'requested', approver_id }), req.ip, req.headers['user-agent']]
   );
+
+  const [generatorRows] = await db.query('SELECT full_name FROM users WHERE id = ?', [req.user.id]);
+  const generatorName   = generatorRows[0]?.full_name || 'A team member';
+  await sendDocReadyEmail(approvers[0].email, approvers[0].full_name, docs[0].doc_uuid, generatorName).catch(() => {});
 
   res.json({ message: 'Signature request sent' });
 };
@@ -107,6 +111,11 @@ exports.approveDocument = async (req, res) => {
     [req.user.id, request.doc_id, 'SIGN', JSON.stringify({ step: 'approved', hmac }), req.ip, req.headers['user-agent']]
   );
 
+  const [genRows] = await db.query('SELECT email, full_name FROM users WHERE id = (SELECT generated_by FROM generated_docs WHERE id = ?)', [request.doc_id]);
+  if (genRows.length > 0) {
+    await sendDocSignedEmail(genRows[0].email, genRows[0].full_name, request.doc_uuid, request.approver_name).catch(() => {});
+  }
+
   res.json({ message: 'Document approved and signed', hmac });
 };
 
@@ -125,7 +134,7 @@ exports.rejectDocument = async (req, res) => {
   await db.query('UPDATE signature_requests SET status = ?, rejection_reason = ? WHERE id = ?', ['rejected', rejection_reason, request_id]);
   await db.query('UPDATE generated_docs SET status = ? WHERE id = ?', ['draft', request.doc_id]);
 
-  await sendRejectionEmail(request.generator_email, request.generator_name, request.doc_uuid, rejection_reason);
+  await sendDocRejectedEmail(request.generator_email, request.generator_name, request.doc_uuid, request.approver_name || 'Approver', rejection_reason).catch(() => {});
 
   await db.query(
     'INSERT INTO audit_logs (user_id, doc_id, action, action_details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',

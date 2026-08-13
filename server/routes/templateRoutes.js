@@ -18,6 +18,7 @@ const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 }, fileFilt
   cb(null, allowed.includes(file.mimetype));
 }});
 
+router.post('/upload-image', auth, admins, upload.single('image'), ctrl.uploadTemplateImage);
 router.get('/schema',         auth, admins,   ctrl.getSchemaFields);
 router.get('/',               auth, canView,  ctrl.getTemplates);
 router.get('/:id',            auth, canView,  ctrl.getTemplateById);

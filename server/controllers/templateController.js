@@ -93,3 +93,14 @@ exports.uploadLogo = async (req, res) => {
   await db.query('UPDATE templates SET logo_path = ? WHERE id = ?', [relativePath, req.params.id]);
   res.json({ message: 'Logo uploaded', path: relativePath, url: `/uploads/${req.file.filename}` });
 };
+
+exports.uploadTemplateImage = async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  const relativePath = `/uploads/${req.file.filename}`;
+  res.json({
+    message: 'Image uploaded',
+    path: relativePath,
+    url: relativePath,
+    fullUrl: `http://localhost:${process.env.PORT || 5000}${relativePath}`,
+  });
+};

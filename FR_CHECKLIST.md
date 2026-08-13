@@ -53,7 +53,7 @@
 - [x] FR-024 OTP validation adds visual signature block + HMAC-SHA256 to PDF
 - [x] FR-025 Rejection workflow — reason required, doc reverts to Draft, Generator notified
 - [ ] FR-026 E-Sign timestamped by NTP-synced server for legal defensibility
-- [ ] FR-027 Auto-escalation reminder after 72 hours of unsigned document
+- [x] FR-027 Auto-escalation reminder after 72 hours of unsigned document
 
 ---
 
@@ -63,7 +63,7 @@
 - [x] FR-028b Deliver via email — branded email with PDF attached
 - [x] FR-028c Generate secure download link (expires 7 days)
 - [x] FR-029 Log recipient IP, browser, timestamp on link click
-- [ ] FR-030 Email notifications for: Doc Ready, Doc Signed, Doc Rejected, 24hr Reminder, 72hr Escalation
+- [x] FR-030 Email notifications for: Doc Ready, Doc Signed, Doc Rejected, 24hr Reminder, 72hr Escalation
 - [x] FR-031 Admin can mark doc as "Hand Delivered"
 - [-] FR-032 Not legible — deferred
 
