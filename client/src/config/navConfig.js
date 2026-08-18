@@ -23,7 +23,7 @@ export const navGroups = [
     group: 'Workflow',
     items: [
       { to: '/approvals', label: 'Approvals',       roles: [SA, SYS, APP],           icon: 'check-circle' },
-      { to: '/verify',    label: 'Verify Document', roles: [SA, SYS, GEN, APP, REC], icon: 'shield'       },
+      { to: '/verify-doc', label: 'Verify Document', roles: [SA, SYS, GEN, APP, REC], icon: 'shield'       },
     ],
   },
   {

@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute   from './components/ProtectedRoute';
 import Layout           from './components/Layout';
 
+import LandingPage        from './pages/LandingPage';
+import PublicVerifyPage   from './pages/PublicVerifyPage';
 import LoginPage          from './pages/LoginPage';
 import DashboardPage      from './pages/DashboardPage';
 import TemplatesPage      from './pages/TemplatesPage';
@@ -32,14 +34,18 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public */}
-          <Route path="/login"  element={<LoginPage />} />
-          <Route path="/verify" element={<VerifyPage />} />
 
-          {/* Protected layout */}
+          {/* ── Public (no auth) ──────────────────────────── */}
+          <Route path="/"       element={<LandingPage />} />
+          <Route path="/verify" element={<PublicVerifyPage />} />
+          {/* QR codes embed /verify/:doc_uuid — resolves directly */}
+          <Route path="/verify/:doc_uuid" element={<PublicVerifyPage />} />
+          <Route path="/login"  element={<LoginPage />} />
+
+          {/* ── Protected app shell ───────────────────────── */}
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
 
-            {/* All roles */}
+            {/* Default landing for authenticated users */}
             <Route path="/dashboard" element={<DashboardPage />} />
 
             {/* Admins only */}
@@ -53,25 +59,24 @@ export default function App() {
             {/* Generate — admins + generator + approver */}
             <Route path="/generate"  element={<Guard roles={[SA,SYS,GEN,APP]}><GenerateDocPage /></Guard>} />
 
-            {/* Documents — all except blocked by backend */}
+            {/* Documents — all roles */}
             <Route path="/documents" element={<Guard roles={[SA,SYS,GEN,APP,REC]}><DocumentsPage /></Guard>} />
 
             {/* Approvals — admins + approver */}
             <Route path="/approvals" element={<Guard roles={[SA,SYS,APP]}><ApprovalsPage /></Guard>} />
 
-            {/* Verify — all roles */}
+            {/* In-app verify (sidebar nav link /verify-doc) — all roles */}
             <Route path="/verify-doc" element={<Guard roles={[SA,SYS,GEN,APP,REC]}><VerifyPage /></Guard>} />
 
-            {/* System settings — super_admin only */}
+            {/* Settings */}
             <Route path="/settings/system"   element={<Guard roles={[SA]}><SettingsPage /></Guard>} />
-
-            {/* Password settings — all roles */}
             <Route path="/settings/password" element={<Guard roles={[SA,SYS,GEN,APP,REC]}><SettingsPage /></Guard>} />
 
           </Route>
 
-          <Route path="/"  element={<Navigate to="/dashboard" replace />} />
-          <Route path="*"  element={<NotFoundPage />} />
+          {/* Catch-all */}
+          <Route path="*" element={<NotFoundPage />} />
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>

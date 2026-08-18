@@ -367,20 +367,21 @@ export default function DashboardPage() {
       </div>
 
       {/* Security banner */}
-      <div className="bg-gradient-to-r from-[#0d1829] to-[#112240] rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-blue-900/30">
+      <div className="bg-[#f0f4ff] rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-indigo-100">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
             </svg>
           </div>
           <div>
-            <p className="text-white font-bold text-sm">SHA-256 Tamper-Proof Documents</p>
-            <p className="text-blue-400/60 text-xs mt-0.5">Every generated PDF is cryptographically hashed. Any external edit is immediately detected.</p>
+            <p className="text-gray-800 font-bold text-sm">SHA-256 Tamper-Proof Documents</p>
+            <p className="text-gray-500 text-xs mt-0.5">Every generated PDF is cryptographically hashed. Any external edit is immediately detected.</p>
           </div>
         </div>
-        <a href="/verify" className="flex-shrink-0 bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
-          Verify a Document →
+        <a href="/verify"
+          className="flex-shrink-0 bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-600 text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
+          Verify a Document
         </a>
       </div>
 

@@ -34,7 +34,7 @@ function SearchBar() {
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         placeholder="Search documents, templates..."
-        className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 focus:bg-white transition-all"
+        className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all"
       />
       {value && (
         <button onClick={() => setValue('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -166,12 +166,12 @@ function UserMenu() {
         onClick={() => setOpen(o => !o)}
         className={`flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl transition-colors ${open ? 'bg-gray-100' : 'hover:bg-gray-100'}`}
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-2 ring-white flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center ring-2 ring-white flex-shrink-0">
           <span className="text-xs font-bold text-white">{initial}</span>
         </div>
         <div className="text-left hidden sm:block">
           <p className="text-[13px] font-semibold text-gray-800 leading-tight">{user?.full_name || '—'}</p>
-          <p className="text-[11px] text-gray-400 capitalize leading-tight">{user?.role}</p>
+          <p className="text-[11px] text-gray-400 capitalize leading-tight">{user?.role?.replace(/_/g, ' ')}</p>
         </div>
         <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -215,7 +215,7 @@ function UserMenu() {
 
 export default function Navbar({ onMenuClick }) {
   return (
-    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 z-10">
+    <header className="h-16 bg-white border-b border-[#f0f0f4] flex items-center justify-between px-4 sm:px-6 flex-shrink-0 z-10 shadow-sm">
       <div className="flex items-center gap-3">
         {/* Mobile hamburger */}
         <button onClick={onMenuClick} className="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
@@ -227,7 +227,7 @@ export default function Navbar({ onMenuClick }) {
       </div>
       <div className="flex items-center gap-1.5">
         <NotificationBell />
-        <div className="w-px h-6 bg-gray-200 mx-1.5" />
+        <div className="w-px h-6 bg-gray-100 mx-1.5" />
         <UserMenu />
       </div>
     </header>
