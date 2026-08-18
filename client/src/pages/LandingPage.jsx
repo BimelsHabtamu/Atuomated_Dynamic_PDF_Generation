@@ -98,24 +98,20 @@ const STEPS = [
 
 const SLIDES = [
   {
-    url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1920&q=80&auto=format&fit=crop',
-    caption: 'Academic Registry',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1920&q=80&auto=format&fit=crop',
+    url: '/image1.png',
     caption: 'University Campus',
   },
   {
-    url: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1920&q=80&auto=format&fit=crop',
-    caption: 'Official Documents',
+    url: '/image2.png',
+    caption: 'Kombolcha Institute of Technology',
   },
   {
-    url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1920&q=80&auto=format&fit=crop',
-    caption: 'Student Records',
+    url: '/image3.png',
+    caption: 'University Administration',
   },
   {
-    url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&q=80&auto=format&fit=crop',
-    caption: 'Administration Office',
+    url: '/image4.png',
+    caption: 'Campus Community',
   },
 ];
 
