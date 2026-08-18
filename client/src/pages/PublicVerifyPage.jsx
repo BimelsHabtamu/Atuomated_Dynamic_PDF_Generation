@@ -130,7 +130,7 @@ export default function PublicVerifyPage() {
           {/* Logo */}
           <div className="w-16 h-16 rounded-2xl bg-white border border-[#e8eaf0]
             shadow-sm flex items-center justify-center mx-auto">
-            <img src="/logo.png" alt="Wollo University" className="w-10 h-10 object-contain"/>
+            <img src="/logo.png" alt="DocuVault" className="w-10 h-10 object-contain"/>
           </div>
 
           <div className="space-y-2">
@@ -138,7 +138,7 @@ export default function PublicVerifyPage() {
               Document Verification
             </h1>
             <p className="text-[#64748b] text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
-              Verify the authenticity of any official Wollo University document
+              Verify the authenticity of any official DocuVault document
               using cryptographic SHA-256 hash verification.
             </p>
           </div>
@@ -421,27 +421,7 @@ export default function PublicVerifyPage() {
               </div>
             </div>
           )}
-
-          {/* How it works */}
-          <div className="bg-white rounded-2xl border border-[#e8eaf0] shadow-sm p-5
-            flex items-start gap-4">
-            <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center
-              justify-center flex-shrink-0 mt-0.5 border border-indigo-100">
-              <svg className="w-4 h-4 text-[#3b5bdb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <div>
-              <p className="text-[#1e2a3a] font-bold text-sm">How Verification Works</p>
-              <p className="text-[#64748b] text-xs mt-1 leading-relaxed">
-                Every Wollo University PDF is fingerprinted with a SHA-256 hash at generation
-                time and stored immutably in the database. Verification recomputes the hash
-                and compares it against the stored value. Any external edit — even a single
-                byte — immediately flags the document as tampered.
-              </p>
-            </div>
-          </div>
+         
 
           {/* Back to home */}
           <div className="text-center pb-4">

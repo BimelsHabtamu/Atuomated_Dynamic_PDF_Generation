@@ -54,14 +54,14 @@ export default function PublicNavbar() {
           <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <img
               src="/logo.png"
-              alt="Wollo University"
+              alt="DocuVault"
               className="h-10 w-auto object-contain flex-shrink-0
                 group-hover:scale-105 transition-transform duration-200 drop-shadow-sm"
             />
             <div className="leading-tight hidden sm:block">
               <p className="text-sm font-black text-[#1e2a3a] tracking-tight
                 group-hover:text-[#3b5bdb] transition-colors">
-                Wollo University
+                DocuVault
               </p>
               <p className="text-[10px] font-medium text-[#94a3b8] tracking-wide">
                 Document Generation Engine

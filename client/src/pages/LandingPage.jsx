@@ -1,17 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
-
-// Soft white theme
-// Page bg      : #f7f8fc
-// Card bg      : #ffffff
-// Primary      : #3b5bdb  (indigo)
-// Accent       : #4dabf7  (light blue)
-// Text dark    : #1e2a3a
-// Text muted   : #64748b
-// Border       : #e8eaf0
-
-/* ── Feature card ----------------------------------------- */
 function FeatureCard({ icon, title, description, accent }) {
   return (
     <div className="bg-white rounded-2xl border border-[#e8eaf0] shadow-sm
@@ -24,8 +13,6 @@ function FeatureCard({ icon, title, description, accent }) {
     </div>
   );
 }
-
-/* ── Step card -------------------------------------------- */
 function StepCard({ num, title, description, active }) {
   return (
     <div className={`flex flex-col items-center text-center gap-3 p-5 rounded-2xl border
@@ -194,15 +181,7 @@ export default function LandingPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 w-full">
           <div className="max-w-2xl space-y-8">
 
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2.5
-              bg-white/10 backdrop-blur-sm border border-white/20
-              rounded-full px-4 py-2">
-              <img src="/logo.png" alt="" className="w-5 h-5 object-contain rounded-full"/>
-              <span className="text-xs text-white/90 font-semibold">
-                Wollo University — Official Document Platform
-              </span>
-            </div>
+          
 
             {/* Headline */}
             <div className="space-y-2">
@@ -526,7 +505,7 @@ export default function LandingPage() {
             </svg>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-[#1e2a3a]">
-            Received a Wollo University document?
+            Received a DocuVault document?
           </h2>
           <p className="text-[#64748b] text-sm max-w-xl mx-auto leading-relaxed">
             Verify its authenticity in seconds — no account needed. Scan the QR code
@@ -551,7 +530,7 @@ export default function LandingPage() {
       ================================================ */}
       <section className="bg-white py-20 border-t border-[#e8eaf0]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-7">
-          <img src="/logo.png" alt="Wollo University"
+          <img src="/logo.png" alt="DocuVault"
             className="h-16 w-auto object-contain mx-auto drop-shadow-sm" />
           <div className="space-y-3">
             <h2 className="text-3xl sm:text-4xl font-black text-[#1e2a3a] leading-tight">
@@ -559,7 +538,7 @@ export default function LandingPage() {
               <span className="text-[#3b5bdb]"> paperless?</span>
             </h2>
             <p className="text-[#64748b] text-base max-w-lg mx-auto leading-relaxed">
-              Join Wollo University's digital transformation. Generate, sign, and deliver
+              Join DocuVault's digital transformation. Generate, sign, and deliver
               official documents in minutes — not days.
             </p>
           </div>
@@ -584,7 +563,7 @@ export default function LandingPage() {
             </Link>
           </div>
           <p className="text-xs text-[#94a3b8]">
-            Wollo University — Document Generation Engine — ProjID: 01311CIS2026
+            DocuVault — Document Generation Engine — ProjID: 01311CIS2026
           </p>
         </div>
       </section>

@@ -229,18 +229,7 @@ export default function VerifyPage() {
               ))}
             </div>
           </div>
-        )}
-
-        {/* How it works */}
-        <div className="bg-gradient-to-r from-[#0d1829] to-[#112240] rounded-2xl p-5 flex items-start gap-4 border border-blue-900/30">
-          <div className="w-9 h-9 bg-blue-500/15 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg className="w-4.5 h-4.5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </div>
-          <div>
-            <p className="text-white font-bold text-sm">How Verification Works</p>
-            <p className="text-blue-400/70 text-xs mt-1 leading-relaxed">Every generated PDF has a SHA-256 hash stored in the database at generation time. Verification recomputes the hash and compares it with the stored value. Any external edit — even a single byte — will flag the document as tampered.</p>
-          </div>
-        </div>
+        )}   
 
       </div>
     </div>

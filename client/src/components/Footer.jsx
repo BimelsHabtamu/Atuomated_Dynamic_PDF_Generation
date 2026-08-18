@@ -1,6 +1,4 @@
-import { Link } from 'react-router-dom';
-
-// Wollo University brand colours
+// DocuVault brand colours
 // Purple : #3b5bdb
 // Orange : #60a5fa
 
@@ -21,19 +19,19 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <img
                 src="/logo.png"
-                alt="Wollo University"
+                alt="DocuVault"
                 className="h-14 w-auto object-contain flex-shrink-0
                   drop-shadow-lg bg-white rounded-xl p-1.5"
               />
               <div>
                 <p className="text-white font-black text-base leading-tight">
-                  Wollo University
+                  DocuVault
                 </p>
                 <p className="text-[#3b5bdb] text-xs font-semibold tracking-wide mt-0.5">
                   Document Automation Platform
                 </p>
                 <p className="text-gray-400 text-[10px] mt-0.5">
-                  Document Generation Engine · Wollo University
+                  Document Generation Engine · DocuVault
                 </p>
               </div>
             </div>
@@ -41,7 +39,7 @@ export default function Footer() {
             <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
               A centralized, role-based document automation platform — replacing
               manual PDF creation with a secure, auditable, and tamper-proof workflow
-              for Wollo University.
+              for DocuVault.
             </p>
 
             <div className="space-y-2">
@@ -71,16 +69,20 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5">
               {[
-                { to: '/',       label: 'Home' },
-                { to: '/verify', label: 'Verify a Document' },
-                { to: '/login',  label: 'Staff Sign In' },
-              ].map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to}
+                { href: '/',          label: 'Home' },
+                { href: '/#features', label: 'Features' },
+                { href: '/#how',      label: 'How It Works' },
+                { href: '/#security', label: 'Security' },
+                { href: '/verify',    label: 'Verification' },
+                { href: '/#about',    label: 'About' },
+                { href: '/login',     label: 'Sign In' },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <a href={href}
                     className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#60a5fa] transition-colors group">
                     <span className="w-1 h-1 bg-[#3b5bdb] rounded-full group-hover:bg-[#60a5fa] transition-colors flex-shrink-0" />
                     {label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -126,11 +128,11 @@ export default function Footer() {
           </div>
 
           <p className="text-center text-xs text-gray-600">
-            &copy; {year} Wollo University · Wollo University · All rights reserved ·
+            &copy; {year} DocuVault · DocuVault · All rights reserved ·
             <span className="text-gray-700"> ProjID: 01311CIS2026</span>
           </p>
           <p className="text-center text-[10px] text-gray-700">
-            Document Automation Platform · Wollo University Computer &amp; Information Science Department
+            Document Automation Platform · DocuVault Computer &amp; Information Science Department
           </p>
         </div>
       </div>
