@@ -60,6 +60,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth',          require('./routes/authRoutes'));
 app.use('/api/users',         require('./routes/userRoutes'));
+app.use('/api/settings',      require('./routes/settingsRoutes'));
 app.use('/api/templates',     require('./routes/templateRoutes'));
 app.use('/api/documents',     require('./routes/documentRoutes'));
 app.use('/api/esign',         require('./routes/esignRoutes'));

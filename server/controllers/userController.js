@@ -1,6 +1,60 @@
 const db     = require('../config/db');
 const bcrypt = require('bcryptjs');
 
+exports.getMySettings = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT id, full_name, email, phone, avatar_url, role, department,
+              language, theme, notification_email, session_timeout_minutes
+       FROM users WHERE id = ?`,
+      [req.user.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to load account settings', error: err.message });
+  }
+};
+
+exports.updateMySettings = async (req, res) => {
+  const { full_name, email, phone, language, theme, notification_email, session_timeout_minutes } = req.body;
+  if (!full_name || !email) return res.status(400).json({ message: 'Name and email are required' });
+  const timeout = Number(session_timeout_minutes);
+  if (!Number.isInteger(timeout) || timeout < 5 || timeout > 1440) {
+    return res.status(400).json({ message: 'Session timeout must be between 5 and 1440 minutes' });
+  }
+  if (!['en', 'am'].includes(language) || !['system', 'light', 'dark'].includes(theme)) {
+    return res.status(400).json({ message: 'Invalid language or theme preference' });
+  }
+  try {
+    const [existing] = await db.query('SELECT id FROM users WHERE email = ? AND id <> ?', [email, req.user.id]);
+    if (existing.length > 0) return res.status(409).json({ message: 'Email already exists' });
+    await db.query(
+      `UPDATE users SET full_name = ?, email = ?, phone = ?, language = ?, theme = ?,
+       notification_email = ?, session_timeout_minutes = ? WHERE id = ?`,
+      [full_name, email, phone || null, language, theme, notification_email ? 1 : 0, timeout, req.user.id]
+    );
+    const [rows] = await db.query(
+      'SELECT id, full_name, email, phone, avatar_url, role, department, language, theme, notification_email, session_timeout_minutes FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to save account settings', error: err.message });
+  }
+};
+
+exports.updateMyAvatar = async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Profile photo is required' });
+  try {
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, req.user.id]);
+    res.json({ avatar_url: avatarUrl });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to save profile photo', error: err.message });
+  }
+};
+
 exports.getUsers = async (req, res) => {
   try {
     const [rows] = await db.query(

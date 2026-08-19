@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useForm, required, email as emailRule } from '../hooks/useForm';
@@ -38,15 +39,17 @@ export default function LoginPage() {
   };
   const hasError = (field) => touched[field] && errors[field];
   return (
-    <div className="min-h-screen bg-[#f9fafb] flex flex-col items-center justify-center px-4">
+    <div className="relative min-h-screen bg-[#f9fafb] flex flex-col items-center justify-center px-4">
+      <Link
+        to="/"
+        className="absolute left-5 top-5 inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-blue-600 sm:left-8 sm:top-8"
+      >
+        <ArrowLeftIcon className="h-4 w-4" />
+        <span>Back to Home</span>
+      </Link>
       <div className="w-full max-w-[360px]">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gray-900 mb-5">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
+          <img src="/logo.png" alt="DocuVault" className="mx-auto mb-5 h-20 w-20 object-contain" />
           <h1 className="text-[22px] font-semibold text-gray-900 tracking-tight">Welcome Back</h1>
           <p className="text-sm text-gray-400 mt-1.5 font-normal">Sign in to your account</p>
         </div>

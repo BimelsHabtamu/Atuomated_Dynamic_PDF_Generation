@@ -1,0 +1,19 @@
+USE pdf_engine_db;
+
+ALTER TABLE users
+  ADD COLUMN avatar_url VARCHAR(500) DEFAULT NULL,
+  ADD COLUMN language VARCHAR(20) NOT NULL DEFAULT 'en',
+  ADD COLUMN theme VARCHAR(20) NOT NULL DEFAULT 'system',
+  ADD COLUMN notification_email TINYINT(1) NOT NULL DEFAULT 1,
+  ADD COLUMN session_timeout_minutes INT NOT NULL DEFAULT 60;
+
+UPDATE users SET language = 'en' WHERE language NOT IN ('en', 'am');
+
+CREATE TABLE IF NOT EXISTS system_settings (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  config_key  VARCHAR(100) NOT NULL UNIQUE,
+  config_json JSON NOT NULL,
+  updated_by  INT DEFAULT NULL,
+  updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+);

@@ -109,8 +109,8 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         </svg>
       </button>
 
-      {/* ── Nav — no scroll, flex column ─────────────────── */}
-      <nav className="flex-1 flex flex-col justify-between py-3 px-2 min-h-0">
+      {/* ── Nav — scrolls independently from the account footer ── */}
+      <nav className="flex-1 flex flex-col justify-between py-3 px-2 min-h-0 overflow-y-auto">
         <div className="space-y-0.5">
           {visibleGroups.map((group, gi) => (
             <div key={group.group} className={gi > 0 ? 'pt-3' : ''}>

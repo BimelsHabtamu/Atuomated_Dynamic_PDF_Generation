@@ -9,8 +9,22 @@ CREATE TABLE  users (
     full_name     VARCHAR(150)  NOT NULL,
     role          ENUM('admin','generator','approver','recipient') NOT NULL,
     phone         VARCHAR(20)   DEFAULT NULL,
+    avatar_url    VARCHAR(500)  DEFAULT NULL,
+    language      VARCHAR(20)   NOT NULL DEFAULT 'en',
+    theme         VARCHAR(20)   NOT NULL DEFAULT 'system',
+    notification_email TINYINT(1) NOT NULL DEFAULT 1,
+    session_timeout_minutes INT NOT NULL DEFAULT 60,
     is_active     TINYINT(1)    NOT NULL DEFAULT 1,
     created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS system_settings (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    config_key  VARCHAR(100) NOT NULL UNIQUE,
+    config_json JSON NOT NULL,
+    updated_by  INT DEFAULT NULL,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS templates (

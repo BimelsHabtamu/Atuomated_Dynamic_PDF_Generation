@@ -17,6 +17,7 @@ import UsersPage          from './pages/UsersPage';
 import AuditPage          from './pages/AuditPage';
 import DeliveryLogsPage   from './pages/DeliveryLogsPage';
 import SettingsPage       from './pages/SettingsPage';
+import SystemConfigurationPage from './pages/SystemConfigurationPage';
 import NotFoundPage       from './pages/NotFoundPage';
 
 const SA  = 'super_admin';
@@ -69,8 +70,9 @@ export default function App() {
             <Route path="/verify-doc" element={<Guard roles={[SA,SYS,GEN,APP,REC]}><VerifyPage /></Guard>} />
 
             {/* Settings */}
-            <Route path="/settings/system"   element={<Guard roles={[SA]}><SettingsPage /></Guard>} />
-            <Route path="/settings/password" element={<Guard roles={[SA,SYS,GEN,APP,REC]}><SettingsPage /></Guard>} />
+            <Route path="/settings"          element={<Guard roles={[SA,SYS,GEN,APP,REC]}><SettingsPage /></Guard>} />
+            <Route path="/settings/password" element={<Navigate to="/settings" replace />} />
+            <Route path="/settings/system"   element={<Guard roles={[SA]}><SystemConfigurationPage /></Guard>} />
 
           </Route>
 

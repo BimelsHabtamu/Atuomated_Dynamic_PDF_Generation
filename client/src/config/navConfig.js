@@ -37,8 +37,8 @@ export const navGroups = [
   {
     group: 'Account',
     items: [
-      { to: '/settings/system',   label: 'System Settings', roles: [SA],                      icon: 'server'  },
-      { to: '/settings/password', label: 'Settings',        roles: [SA, SYS, GEN, APP, REC],  icon: 'cog'     },
+      { to: '/settings/system', label: 'System Configuration', roles: [SA],                     icon: 'server' },
+      { to: '/settings',        label: 'My Settings',          roles: [SA, SYS, GEN, APP, REC], icon: 'cog'    },
     ],
   },
 ];

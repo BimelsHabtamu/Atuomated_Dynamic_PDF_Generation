@@ -34,17 +34,11 @@ function StepCard({ num, title, description, active }) {
 }
 
 /* ── Role card -------------------------------------------- */
-function RoleCard({ role, description, permissions, gradient }) {
+function RoleCard({ role, description, permissions, image }) {
   return (
     <div className="bg-white rounded-2xl border border-[#e8eaf0] shadow-sm p-5 space-y-3
       hover:border-indigo-100 hover:shadow-md transition-all duration-200">
-      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient}
-        flex items-center justify-center shadow-sm`}>
-        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-      </div>
+      <img src={image} alt="" className="w-10 h-10 rounded-xl object-contain shadow-sm" />
       <div>
         <h4 className="text-sm font-bold text-[#1e2a3a]">{role}</h4>
         <p className="text-[11px] text-[#64748b] mt-0.5">{description}</p>
@@ -474,19 +468,19 @@ export default function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <RoleCard role="Super Admin"  description="Full system control"
-              gradient="from-indigo-500 to-indigo-700"
+              image="/super.png"
               permissions={['System settings','All templates','Full audit logs','User management']} />
             <RoleCard role="System Admin" description="Platform management"
-              gradient="from-blue-500 to-blue-700"
+              image="/system.png"
               permissions={['Create templates','Manage users','View logs','Generate docs']} />
             <RoleCard role="Generator"    description="HR, Finance, Admin staff"
-              gradient="from-sky-500 to-sky-700"
+              image="/generator.png"
               permissions={['Generate documents','Request signatures','Download own docs','Verify docs']} />
             <RoleCard role="Approver"     description="Directors, Dept. Heads"
-              gradient="from-amber-500 to-amber-700"
+              image="/approver.png"
               permissions={['Review documents','OTP e-signature','Reject with reason','Approval queue']} />
             <RoleCard role="Recipient"    description="Staff, Students, Suppliers"
-              gradient="from-emerald-500 to-emerald-700"
+              image="/Recipient.png"
               permissions={['View own documents','Download assigned','Verify authenticity']} />
           </div>
         </div>
