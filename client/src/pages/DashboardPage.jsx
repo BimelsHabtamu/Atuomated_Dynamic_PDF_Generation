@@ -13,11 +13,12 @@ const ACTION_COLORS = {
   PREVIEW:  { bg: 'bg-gray-100',   text: 'text-gray-600'   },
 };
 const STATUS_COLORS = {
-  draft:     { bar: 'bg-gray-400',    pct: 0 },
-  pending:   { bar: 'bg-yellow-400',  pct: 0 },
-  signed:    { bar: 'bg-blue-500',    pct: 0 },
-  delivered: { bar: 'bg-emerald-500', pct: 0 },
-  rejected:  { bar: 'bg-red-400',     pct: 0 },
+  draft:          { bar: 'bg-gray-400',    pct: 0 },
+  pending:        { bar: 'bg-yellow-400',  pct: 0 },
+  signed:         { bar: 'bg-blue-500',    pct: 0 },
+  delivered:      { bar: 'bg-emerald-500', pct: 0 },
+  hand_delivered: { bar: 'bg-purple-500',  pct: 0 },
+  rejected:       { bar: 'bg-red-400',     pct: 0 },
 };
 function timeAgo(d) {
   const s = Math.floor((Date.now() - new Date(d)) / 1000);
@@ -356,35 +357,7 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <p className="text-sm font-bold text-gray-900 mb-3">Quick Actions</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-          {QUICK_ACTIONS.map(a => <QuickAction key={a.label} {...a} role={role} />)}
-        </div>
-      </div>
-
-      {/* Security banner */}
-      <div className="bg-[#f0f4ff] rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-indigo-100">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-          </div>
-          <div>
-            <p className="text-gray-800 font-bold text-sm">SHA-256 Tamper-Proof Documents</p>
-            <p className="text-gray-500 text-xs mt-0.5">Every generated PDF is cryptographically hashed. Any external edit is immediately detected.</p>
-          </div>
-        </div>
-        <a href="/verify"
-          className="flex-shrink-0 bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-600 text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
-          Verify a Document
-        </a>
-      </div>
-
+      </div>     
     </div>
   );
 }

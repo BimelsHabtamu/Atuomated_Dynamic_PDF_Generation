@@ -26,64 +26,115 @@ import { useToast } from '../context/ToastContext';
 const CATEGORIES = ['HR', 'Finance', 'Academic', 'Procurement', 'General'];
 const WATERMARKS = ['', 'DRAFT', 'CONFIDENTIAL', 'FINAL'];
 
-const DYNAMIC_FIELDS = {
-  Employee: [
-    { label: 'Full Name', tag: '{{employee.full_name}}' },
-    { label: 'Position', tag: '{{employee.position}}' },
-    { label: 'Department', tag: '{{employee.department}}' },
-    { label: 'Email', tag: '{{employee.email}}' },
-    { label: 'Phone', tag: '{{employee.phone}}' },
+// ── Static field groups (shown when DB schema not yet loaded) ─────────────────
+const STATIC_FIELDS = {
+  '👤 Employee': [
+    { label: 'Full Name',    tag: '{{employee.full_name}}' },
+    { label: 'Position',     tag: '{{employee.position}}' },
+    { label: 'Department',   tag: '{{employee.department}}' },
+    { label: 'Email',        tag: '{{employee.email}}' },
+    { label: 'Phone',        tag: '{{employee.phone}}' },
+    { label: 'Employee ID',  tag: '{{employee.id}}' },
+    { label: 'Join Date',    tag: '{{employee.join_date}}' },
   ],
-  Finance: [
-    { label: 'Salary', tag: '{{finance.salary}}' },
-    { label: 'Currency', tag: '{{finance.currency}}' },
-    { label: 'Pay Date', tag: '{{finance.pay_date}}' },
-    { label: 'Bank Name', tag: '{{finance.bank_name}}' },
+  '💰 Finance': [
+    { label: 'Salary',       tag: '{{finance.salary}}' },
+    { label: 'Currency',     tag: '{{finance.currency}}' },
+    { label: 'Pay Date',     tag: '{{finance.pay_date}}' },
+    { label: 'Bank Name',    tag: '{{finance.bank_name}}' },
+    { label: 'Account No.',  tag: '{{finance.account_number}}' },
   ],
-  Company: [
-    { label: 'Company Name', tag: '{{company.name}}' },
-    { label: 'Address', tag: '{{company.address}}' },
-    { label: 'Email', tag: '{{company.email}}' },
-    { label: 'Phone', tag: '{{company.phone}}' },
+  '🏢 System / Org': [
+    { label: 'Company Name',   tag: '{{system.company_name}}' },
+    { label: 'Department',     tag: '{{system.department}}' },
+    { label: 'Address',        tag: '{{system.address}}' },
+    { label: 'Contact Email',  tag: '{{system.contact_email}}' },
+    { label: 'Contact Phone',  tag: '{{system.contact_phone}}' },
+    { label: 'Company Seal',   tag: '{{system.company_seal}}' },
+    { label: 'Logo URL',       tag: '{{system.logo_url}}' },
   ],
-  General: [
-    { label: 'Generation Date', tag: '{{generation_date}}' },
-    { label: 'Effective Date', tag: '{{effective_date}}' },
-    { label: 'Conditional Block', tag: '{{#if condition}}\n  content\n{{/if}}' },
-    { label: 'Loop Block', tag: '{{#each items}}\n  {{this.field}}\n{{/each}}' },
+  '✍️ Approver': [
+    { label: 'Full Name',       tag: '{{approver.full_name}}' },
+    { label: 'Role / Title',    tag: '{{approver.role}}' },
+    { label: 'Department',      tag: '{{approver.department}}' },
+    { label: 'Signature Image', tag: '{{approver.signature_image}}' },
+  ],
+  '📅 Dates': [
+    { label: 'Generation Date',    tag: '{{generation_date}}' },
+    { label: 'Generation Time',    tag: '{{generation_time}}' },
+    { label: 'Generation DateTime',tag: '{{generation_datetime}}' },
+    { label: 'Effective Date',     tag: '{{effective_date}}' },
+    { label: 'Year',               tag: '{{generation_year}}' },
+    { label: 'Month',              tag: '{{generation_month}}' },
+  ],
+  '🔀 Logic Blocks': [
+    { label: '{{#if}} block',      tag: '{{#if condition}}\nContent shown when true\n{{/if}}' },
+    { label: '{{#if}} with else',  tag: '{{#if condition}}\nTrue content\n{{else}}\nFalse content\n{{/if}}' },
+    { label: '{{#each}} loop',     tag: '{{#each items}}\n{{this.field_name}}\n{{/each}}' },
   ],
 };
 
+// ── Sample data for live preview ──────────────────────────────────────────────
 const SAMPLE = {
-  'employee.full_name': 'Sara Ahmed',
-  'employee.position': 'HR Manager',
-  'employee.department': 'Human Resources',
-  'employee.email': 'sara@company.com',
-  'employee.phone': '+966 500 123 456',
-  'finance.salary': 'SAR 12,500',
-  'finance.currency': 'SAR',
-  'finance.pay_date': '23 May 2026',
-  'finance.bank_name': 'Al Rajhi Bank',
-  'company.name': 'Northwind Trading',
-  'company.address': 'Riyadh, Saudi Arabia',
-  'company.phone': '+966 112 345 678',
-  'company.email': 'info@northwind.sa',
-  generation_date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-  effective_date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+  'employee.full_name': '',
+  'employee.position':  'HR Manager',
+  'employee.department':'Human Resources',
+  'employee.email':     'sara@company.com',
+  'employee.phone':     '+251 912 345 678',
+  'employee.id':        'EMP-0042',
+  'employee.join_date': '01 Jan 2022',
+  'finance.salary':     'ETB 45,000',
+  'finance.currency':   'ETB',
+  'finance.pay_date':   '30 Aug 2026',
+  'finance.bank_name':  'Commercial Bank of Ethiopia',
+  'finance.account_number': '1000123456789',
+  'system.company_name':   'Kombolcha Institute of Technology',
+  'system.department':     'Human Resources',
+  'system.address':        'Kombolcha, Amhara, Ethiopia',
+  'system.contact_email':  'hr@kit.edu.et',
+  'system.contact_phone':  '+251 331 234 567',
+  'approver.full_name':    'Dr. Abebe Tadesse',
+  'approver.role':         'Finance Director',
+  'approver.department':   'Finance Office',
+  generation_date:     new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }),
+  generation_time:     new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }),
+  generation_datetime: new Date().toLocaleString('en-US'),
+  generation_year:     String(new Date().getFullYear()),
+  generation_month:    new Date().toLocaleDateString('en-US', { month:'long' }),
+  effective_date:      new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }),
 };
 
 function renderPreview(html) {
   if (!html) return '';
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   let result = html;
 
+  // Fix relative image src paths (e.g. storage/uploads/logo.png → full URL)
+  result = result.replace(
+    /src="(?!http|data:)([^"]+)"/g,
+    (_, path) => `src="${API}/${path.replace(/^\//, '')}"`
+  );
+
   Object.entries(SAMPLE).forEach(([key, value]) => {
-    const escaped = key.replace(/\./g, '\.');
-    result = result.replace(new RegExp(`{{${escaped}}}`, 'g'), `<mark style="background:#dbeafe;color:#1e40af;padding:1px 5px;border-radius:4px;font-weight:600">${value}</mark>`);
+    const escaped = key.replace(/\./g, '\\.');
+    result = result.replace(
+      new RegExp(`{{${escaped}}}`, 'g'),
+      `<mark style="background:#dbeafe;color:#1e40af;padding:1px 5px;border-radius:4px;font-weight:600">${value}</mark>`
+    );
   });
 
-  result = result.replace(/{{#if\s+.+?}}([\s\S]*?){{\/if}}/g, '<div style="background:#f0fdf4;border-left:3px solid #16a34a;padding:6px 10px;margin:4px 0;border-radius:0 4px 4px 0">$1</div>');
-  result = result.replace(/{{#each\s+(\w+)}}([\s\S]*?){{\/each}}/g, '<div style="background:#fff7ed;border-left:3px solid #ea580c;padding:6px 10px;margin:4px 0"><em style="font-size:10px;color:#ea580c">LOOP ($1):</em> $2</div>');
-  result = result.replace(/{{[\w.]+}}/g, (match) => `<mark style="background:#fef9c3;color:#854d0e;padding:1px 5px;border-radius:4px">${match}</mark>`);
+  result = result.replace(
+    /{{#if\s+.+?}}([\s\S]*?){{\/if}}/g,
+    '<div style="background:#f0fdf4;border-left:3px solid #16a34a;padding:6px 10px;margin:4px 0;border-radius:0 4px 4px 0">$1</div>'
+  );
+  result = result.replace(
+    /{{#each\s+(\w+)}}([\s\S]*?){{\/each}}/g,
+    '<div style="background:#fff7ed;border-left:3px solid #ea580c;padding:6px 10px;margin:4px 0"><em style="font-size:10px;color:#ea580c">LOOP ($1):</em> $2</div>'
+  );
+  result = result.replace(
+    /{{[\w.]+}}/g,
+    (match) => `<mark style="background:#fef9c3;color:#854d0e;padding:1px 5px;border-radius:4px">${match}</mark>`
+  );
 
   return result;
 }
@@ -310,11 +361,20 @@ export default function TemplateEditorPage() {
   }, [activeEditor]);
 
   useEffect(() => {
+    // Open the first 3 static groups by default
+    const defaultOpen = Object.keys(STATIC_FIELDS)
+      .slice(0, 3)
+      .reduce((acc, k) => ({ ...acc, [k]: true }), {});
+    setOpenTables(defaultOpen);
+
     axiosInstance.get('/templates/schema')
       .then((response) => {
         setSchema(response.data || {});
-        const firstKey = Object.keys(response.data || {})[0];
-        if (firstKey) setOpenTables({ [firstKey]: true });
+        // Add DB tables to open state without overwriting static defaults
+        const firstDbKey = Object.keys(response.data || {})[0];
+        if (firstDbKey) {
+          setOpenTables(prev => ({ ...prev, [`db_${firstDbKey}`]: true }));
+        }
       })
       .catch(() => {});
 
@@ -344,7 +404,7 @@ export default function TemplateEditorPage() {
           footerEditor.commands.setContent(template.footer_html);
           setFooterHtml(template.footer_html);
         }
-        if (template.logo_path) setLogoPreview(`http://localhost:5000/${template.logo_path}`);
+        if (template.logo_path) setLogoPreview(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${template.logo_path}`);
       })
       .catch(() => toast.error('Failed to load template'))
       .finally(() => setLoading(false));
@@ -393,16 +453,43 @@ export default function TemplateEditorPage() {
   };
 
   const watchedWatermark = watch('watermark_text');
+
+  // ── Merge static fields with live DB schema ──────────────────────────────
+  // Static groups always appear first; DB tables appear below with a "DB:" prefix
   const filteredSchema = Object.entries(schema).reduce((acc, [table, fields]) => {
-    const query = fieldSearch.toLowerCase();
-    const filtered = fields.filter((field) => field.field.toLowerCase().includes(query) || field.placeholder.toLowerCase().includes(query));
+    const query    = fieldSearch.toLowerCase();
+    const filtered = fields.filter(f =>
+      f.field.toLowerCase().includes(query) || f.placeholder.toLowerCase().includes(query)
+    );
     if (filtered.length) acc[table] = filtered;
     return acc;
   }, {});
 
+  const dbGroups = Object.entries(filteredSchema).map(([table, fields]) => ({
+    key:    `db_${table}`,
+    label:  `🗄 ${table}`,
+    isDb:   true,
+    fields: fields.map(f => ({ label: f.field, tag: f.placeholder })),
+  }));
+
+  const staticGroups = Object.entries(STATIC_FIELDS).map(([group, fields]) => {
+    const q       = fieldSearch.toLowerCase();
+    const visible = fields.filter(f =>
+      `${group} ${f.label} ${f.tag}`.toLowerCase().includes(q)
+    );
+    return { key: group, label: group, isDb: false, fields: visible };
+  }).filter(g => g.fields.length > 0);
+
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const resolvedLogo = logoPreview
+    ? (logoPreview.startsWith('http') || logoPreview.startsWith('data:') || logoPreview.startsWith('blob:')
+        ? logoPreview
+        : `${API_BASE}/${logoPreview.replace(/^\//, '')}`)
+    : '';
+
   const previewContent = `
     <div style="font-family:Inter,Arial,sans-serif;font-size:12.5px;color:#111;line-height:1.75">
-      ${logoPreview ? `<img src="${logoPreview}" style="max-height:48px;object-fit:contain;margin-bottom:12px" alt="logo"/>` : ''}
+      ${resolvedLogo ? `<img src="${resolvedLogo}" style="max-height:48px;object-fit:contain;margin-bottom:12px" alt="logo"/>` : ''}
       ${headerHtml && headerHtml !== '<p></p>' ? `<div style="border-bottom:2px solid #1d4ed8;padding-bottom:10px;margin-bottom:14px">${renderPreview(headerHtml)}</div>` : ''}
       <div>${renderPreview(bodyHtml)}</div>
       ${footerHtml && footerHtml !== '<p></p>' ? `<div style="border-top:1px solid #e5e7eb;margin-top:16px;padding-top:10px;font-size:11px;color:#6b7280">${renderPreview(footerHtml)}</div>` : ''}
@@ -455,30 +542,71 @@ export default function TemplateEditorPage() {
           </div>
 
           <div className="space-y-4 overflow-y-auto p-4">
-            {Object.entries(DYNAMIC_FIELDS).map(([group, fields]) => {
-              const visible = fields.filter((field) => `${group} ${field.label} ${field.tag}`.toLowerCase().includes(fieldSearch.toLowerCase()));
-              if (!visible.length) return null;
+            {[...staticGroups, ...dbGroups].map((group) => (
+              <div key={group.key}
+                className={`rounded-2xl border ${group.isDb ? 'border-indigo-100 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/70'}`}>
+                <button
+                  type="button"
+                  onClick={() => setOpenTables(prev => ({ ...prev, [group.key]: !prev[group.key] }))}
+                  className="flex w-full items-center justify-between px-3 py-2.5 text-left"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600 truncate">
+                      {group.label}
+                    </span>
+                    {group.isDb && (
+                      <span className="text-[9px] font-bold bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        DB
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDownIcon className={`h-4 w-4 text-slate-400 transition-transform flex-shrink-0 ${openTables[group.key] !== false ? 'rotate-180' : ''}`} />
+                </button>
 
-              return (
-                <div key={group} className="rounded-2xl border border-slate-200 bg-slate-50/70">
-                  <button type="button" onClick={() => setOpenTables((previous) => ({ ...previous, [group]: !previous[group] }))} className="flex w-full items-center justify-between px-3 py-2.5 text-left">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-600">{group}</span>
-                    <ChevronDownIcon className={`h-4 w-4 text-slate-400 transition-transform ${openTables[group] ? 'rotate-180' : ''}`} />
-                  </button>
+                {openTables[group.key] !== false && (
+                  <div className="space-y-1.5 p-2">
+                    {group.fields.map((field) => (
+                      <button
+                        key={field.tag}
+                        type="button"
+                        onClick={() => insertPlaceholder(field.tag)}
+                        className={`w-full rounded-xl border text-left shadow-sm transition-all
+                          hover:shadow-md active:scale-[0.98]
+                          ${field.tag.startsWith('{{#') || field.tag.startsWith('{{/') || field.tag.includes('#each') || field.tag.includes('#if')
+                            ? 'border-amber-200 bg-amber-50 hover:bg-amber-100'
+                            : field.tag.startsWith('{{system.')
+                            ? 'border-purple-200 bg-purple-50 hover:bg-purple-100'
+                            : field.tag.startsWith('{{approver.')
+                            ? 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                            : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50'
+                          } px-3 py-2`}
+                      >
+                        <div className="text-[11px] font-semibold text-slate-700">{field.label}</div>
+                        <div className="mt-0.5 break-all font-mono text-[9px] text-slate-400 leading-tight">
+                          {field.tag.length > 40 ? field.tag.slice(0, 38) + '…' : field.tag}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
 
-                  {openTables[group] !== false && (
-                    <div className="space-y-2 p-2">
-                      {visible.map((field) => (
-                        <button key={field.tag} type="button" onClick={() => insertPlaceholder(field.tag)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50">
-                          <div className="text-[11px] font-semibold text-slate-700">{field.label}</div>
-                          <div className="mt-1 break-all font-mono text-[10px] text-slate-500">{field.tag}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {/* DB schema source indicator */}
+            {dbGroups.length > 0 && (
+              <div className="flex items-center gap-1.5 px-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/>
+                <span className="text-[10px] text-slate-400">
+                  {dbGroups.length} live DB table{dbGroups.length !== 1 ? 's' : ''} loaded
+                </span>
+              </div>
+            )}
+            {dbGroups.length === 0 && (
+              <div className="flex items-center gap-1.5 px-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400"/>
+                <span className="text-[10px] text-slate-400">DB schema not connected</span>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -550,7 +678,7 @@ export default function TemplateEditorPage() {
           </div>
         </main>
 
-        <aside className="w-[330px] flex-shrink-0 overflow-hidden border-l border-slate-200 bg-white">
+        <aside className="w-[380px] flex-shrink-0 overflow-hidden border-l border-slate-200 bg-white">
           <div className="flex border-b border-slate-200">
             <button type="button" onClick={() => setRightTab('properties')} className={`flex-1 py-3 text-sm font-semibold transition-colors ${rightTab === 'properties' ? 'bg-slate-50 text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
               Properties
@@ -625,14 +753,112 @@ export default function TemplateEditorPage() {
               </div>
             </div>
           ) : (
-            <div className="h-full overflow-y-auto bg-slate-50 p-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Preview</span>
-                  <span className="text-[10px] text-slate-400">Live</span>
+            <div className="h-full overflow-y-auto bg-[#e8eaf0] p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                  Live Preview
+                </span>
+                <span className="text-[10px] bg-emerald-100 text-emerald-600 font-semibold px-2 py-0.5 rounded-full">
+                  Sample Data
+                </span>
+              </div>
+
+              {/* A4 paper */}
+              <div className="mx-auto bg-white shadow-[0_4px_24px_rgba(0,0,0,0.18)]"
+                style={{ width: '100%', minHeight: '420px', borderRadius: '2px' }}>
+
+                {/* PDF Header bar */}
+                <div style={{
+                  background: 'linear-gradient(90deg, #1e3a5f 0%, #2f5496 100%)',
+                  padding: '8px 16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                  <span style={{ color: '#fff', fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', fontFamily: 'Inter, sans-serif' }}>
+                    {watch('name') || 'DOCUMENT TITLE'}
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '8px', fontFamily: 'Inter, sans-serif' }}>
+                    {SAMPLE.generation_date}
+                  </span>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-100 p-4">
-                  <div dangerouslySetInnerHTML={{ __html: previewContent }} />
+
+                {/* Document content */}
+                <div style={{ padding: '20px 24px', fontFamily: 'Inter, Arial, sans-serif', fontSize: '11px', lineHeight: '1.7', color: '#1a1a1a', minHeight: '340px' }}>
+                  {logoPreview && (
+                    <img src={logoPreview.startsWith('http') || logoPreview.startsWith('data:') || logoPreview.startsWith('blob:')
+                      ? logoPreview
+                      : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${logoPreview.replace(/^\//, '')}`}
+                      alt="logo"
+                      style={{ maxHeight: '44px', maxWidth: '160px', objectFit: 'contain', marginBottom: '10px' }}
+                      onError={e => { e.target.style.display = 'none'; }}
+                    />
+                  )}
+
+                  {headerHtml && headerHtml !== '<p></p>' && (
+                    <div style={{ borderBottom: '2px solid #1d4ed8', paddingBottom: '8px', marginBottom: '12px' }}
+                      dangerouslySetInnerHTML={{ __html: renderPreview(headerHtml) }}/>
+                  )}
+
+                  {bodyHtml && bodyHtml !== '<p></p>'
+                    ? <div dangerouslySetInnerHTML={{ __html: renderPreview(bodyHtml) }}/>
+                    : <div style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '10px', textAlign: 'center', padding: '40px 0' }}>
+                        Start writing in the Body editor to see the preview here
+                      </div>
+                  }
+
+                  {footerHtml && footerHtml !== '<p></p>' && (
+                    <div style={{ borderTop: '1px solid #e5e7eb', marginTop: '14px', paddingTop: '8px', fontSize: '10px', color: '#6b7280' }}
+                      dangerouslySetInnerHTML={{ __html: renderPreview(footerHtml) }}/>
+                  )}
+                </div>
+
+                {/* PDF Footer bar */}
+                <div style={{
+                  borderTop: '1px solid #e5e7eb',
+                  padding: '6px 16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: '#f9fafb',
+                }}>
+                  <span style={{ fontSize: '7px', color: '#9ca3af', fontFamily: 'monospace' }}>
+                    DOC-20260820-XXXXX
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '7px', color: '#9ca3af', fontFamily: 'Inter, sans-serif' }}>
+                      Page 1 of 1
+                    </span>
+                    <div style={{ width: '24px', height: '24px', background: '#e5e7eb', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '6px', color: '#9ca3af' }}>QR</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Watermark indicator */}
+              {watchedWatermark && (
+                <div className="mt-2 text-center text-[10px] text-slate-500">
+                  Watermark: <span className="font-bold text-red-500">{watchedWatermark}</span>
+                </div>
+              )}
+
+              {/* Legend */}
+              <div className="mt-3 space-y-1">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Colour legend</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { color: '#dbeafe', textColor: '#1e40af', label: 'Matched data' },
+                    { color: '#fef9c3', textColor: '#854d0e', label: 'Unresolved field' },
+                    { color: '#f0fdf4', textColor: '#15803d', label: '{{#if}} block' },
+                    { color: '#fff7ed', textColor: '#c2410c', label: '{{#each}} loop' },
+                  ].map(l => (
+                    <div key={l.label} className="flex items-center gap-1">
+                      <span style={{ background: l.color, color: l.textColor, fontSize: '8px', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
+                        {l.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

@@ -1,29 +1,98 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import axiosInstance from '../api/axiosInstance';
 
 const CATEGORY_COLORS = {
   HR: 'bg-blue-100 text-blue-700', Finance: 'bg-green-100 text-green-700',
-  Academic: 'bg-purple-100 text-purple-700', Procurement: 'bg-orange-100 text-orange-700', General: 'bg-gray-100 text-gray-600',
+  Academic: 'bg-purple-100 text-purple-700', Procurement: 'bg-orange-100 text-orange-700',
+  General: 'bg-gray-100 text-gray-600',
 };
 const STATUS_COLORS = {
   draft: 'bg-gray-100 text-gray-600', pending: 'bg-yellow-100 text-yellow-700',
-  signed: 'bg-blue-100 text-blue-700', delivered: 'bg-emerald-100 text-emerald-700', rejected: 'bg-red-100 text-red-600',
+  signed: 'bg-blue-100 text-blue-700', delivered: 'bg-emerald-100 text-emerald-700',
+  rejected: 'bg-red-100 text-red-600', hand_delivered: 'bg-purple-100 text-purple-700',
 };
 const TYPE_INPUT = { string: 'text', number: 'number', date: 'date' };
 
 function StepBadge({ step, label, active, done }) {
   return (
-    <div className={`flex items-center gap-2 ${active ? 'text-blue-600' : done ? 'text-emerald-500' : 'text-gray-300'}`}>
+    <div className={`flex items-center gap-2 ${active ? 'text-[#3b5bdb]' : done ? 'text-emerald-500' : 'text-[var(--color-text-secondary)]'}`}>
       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2
-        ${active ? 'border-blue-600 bg-blue-600 text-white' : done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-200 bg-white text-gray-300'}`}>
-        {done ? <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> : step}
+        ${active ? 'border-[#3b5bdb] bg-[#3b5bdb] text-white'
+          : done  ? 'border-emerald-500 bg-emerald-500 text-white'
+          : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)]'}`}>
+        {done
+          ? <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
+            </svg>
+          : step}
       </div>
-      <span className={`text-xs font-semibold hidden sm:block ${active ? 'text-blue-700' : done ? 'text-emerald-600' : 'text-gray-400'}`}>{label}</span>
+      <span className={`text-xs font-semibold hidden sm:block
+        ${active ? 'text-[#3b5bdb]' : done ? 'text-emerald-600' : 'text-[var(--color-text-secondary)]'}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ── Bulk Job Progress Card ────────────────────────────────────────────────────
+function BulkJobCard({ job, onDownload }) {
+  const pct     = job.percent || 0;
+  const isDone  = job.status === 'done';
+  const isError = job.status === 'error';
+
+  return (
+    <div className={`bg-[var(--color-surface)] rounded-2xl border shadow-sm p-5 space-y-3
+      ${isDone ? 'border-emerald-200' : isError ? 'border-red-200' : 'border-[var(--color-border)]'}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-mono text-xs font-semibold text-[var(--color-text-primary)] truncate">
+            {job.jobUuid}
+          </p>
+          <p className="text-[11px] text-[var(--color-text-secondary)] mt-0.5">{job.template}</p>
+        </div>
+        <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 capitalize
+          ${isDone ? 'bg-emerald-100 text-emerald-700'
+            : isError ? 'bg-red-100 text-red-600'
+            : job.status === 'processing' ? 'bg-blue-100 text-blue-700'
+            : 'bg-gray-100 text-gray-600'}`}>
+          {job.status}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div className="flex justify-between text-[10px] text-[var(--color-text-secondary)] mb-1">
+          <span>{job.completed} / {job.total} completed</span>
+          {job.failed > 0 && <span className="text-red-500">{job.failed} failed</span>}
+          <span>{pct}%</span>
+        </div>
+        <div className="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all duration-500
+            ${isDone ? 'bg-emerald-500' : isError ? 'bg-red-400' : 'bg-[#3b5bdb]'}`}
+            style={{ width: `${pct}%` }}/>
+        </div>
+      </div>
+
+      {isDone && (
+        <button onClick={() => onDownload(job.jobUuid)}
+          className="w-full flex items-center justify-center gap-2
+            bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold
+            py-2.5 rounded-xl transition-colors">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download All PDFs (.zip)
+        </button>
+      )}
     </div>
   );
 }
 
 export default function GenerateDocPage() {
+  const [activeTab, setActiveTab] = useState('single'); // 'single' | 'bulk'
+
+  // ── Single generation state ───────────────────────────────────────────────
   const [step, setStep]             = useState(1);
   const [templates, setTemplates]   = useState([]);
   const [selectedId, setSelected]   = useState(null);
@@ -38,6 +107,15 @@ export default function GenerateDocPage() {
   const [search, setSearch]         = useState('');
   const [error, setError]           = useState('');
 
+  // ── Bulk generation state ─────────────────────────────────────────────────
+  const [bulkTemplateId, setBulkTemplate]   = useState('');
+  const [bulkRecords, setBulkRecords]       = useState('');   // raw CSV text
+  const [bulkParsed, setBulkParsed]         = useState(null); // parsed preview
+  const [bulkJobs, setBulkJobs]             = useState([]);
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkError, setBulkError]           = useState('');
+  const pollRef = useRef({});
+
   useEffect(() => {
     axiosInstance.get('/templates').then(r => setTemplates(r.data.filter(t => t.is_active)));
     axiosInstance.get('/documents').then(r => setRecentDocs(r.data.slice(0, 8))).catch(() => {});
@@ -46,10 +124,10 @@ export default function GenerateDocPage() {
   const selectTemplate = async (id) => {
     setSelected(id);
     setPreview(''); setError(''); setGenerated(null);
-    const res   = await axiosInstance.get(`/templates/${id}`);
-    const tmpl  = res.data;
+    const res  = await axiosInstance.get(`/templates/${id}`);
+    const tmpl = res.data;
     setTemplate(tmpl);
-    const init  = {};
+    const init = {};
     (tmpl.placeholders || []).forEach(p => { init[p.field_path] = p.default_value || ''; });
     setValues(init);
   };
@@ -62,7 +140,9 @@ export default function GenerateDocPage() {
   const doPreview = async () => {
     setPreviewing(true); setError('');
     try {
-      const res = await axiosInstance.post('/documents/preview', { template_id: Number(selectedId), data: values });
+      const res = await axiosInstance.post('/documents/preview', {
+        template_id: Number(selectedId), data: values,
+      });
       setPreview(res.data.html);
     } catch (e) { setError(e.response?.data?.message || 'Preview failed'); }
     finally { setPreviewing(false); }
@@ -88,6 +168,92 @@ export default function GenerateDocPage() {
     setValues({}); setRecordId(''); setPreview(''); setGenerated(null); setError('');
   };
 
+  // ── Bulk: parse CSV ───────────────────────────────────────────────────────
+  const parseCsv = (text) => {
+    const lines = text.trim().split('\n').filter(l => l.trim());
+    if (lines.length < 2) return null;
+    const headers = lines[0].split(',').map(h => h.trim());
+    const rows = lines.slice(1).map(line => {
+      const cols = line.split(',').map(c => c.trim());
+      const obj  = {};
+      headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+      return {
+        record_identifier: obj.record_identifier || obj.id || `ROW-${Math.random().toString(36).slice(2,6).toUpperCase()}`,
+        data: obj,
+      };
+    });
+    return { headers, rows };
+  };
+
+  const handleCsvChange = (text) => {
+    setBulkRecords(text);
+    setBulkError('');
+    if (!text.trim()) { setBulkParsed(null); return; }
+    const parsed = parseCsv(text);
+    if (!parsed) { setBulkError('CSV must have at least a header row and one data row'); setBulkParsed(null); return; }
+    if (parsed.rows.length > 500) { setBulkError('Maximum 500 records per bulk job'); return; }
+    setBulkParsed(parsed);
+  };
+
+  const handleCsvFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => handleCsvChange(ev.target.result);
+    reader.readAsText(file);
+  };
+
+  // ── Bulk: submit job ──────────────────────────────────────────────────────
+  const submitBulkJob = async () => {
+    if (!bulkTemplateId) { setBulkError('Select a template first'); return; }
+    if (!bulkParsed?.rows?.length) { setBulkError('No valid records to process'); return; }
+    setBulkSubmitting(true); setBulkError('');
+    try {
+      const res = await axiosInstance.post('/documents/bulk', {
+        template_id: Number(bulkTemplateId),
+        records: bulkParsed.rows,
+      });
+      const jobUuid = res.data.job_uuid;
+      const newJob  = { jobUuid, status: 'queued', total: bulkParsed.rows.length, completed: 0, failed: 0, percent: 0, template: templates.find(t => t.id === Number(bulkTemplateId))?.name || '' };
+      setBulkJobs(prev => [newJob, ...prev]);
+      setBulkRecords(''); setBulkParsed(null);
+      // Start polling
+      startPolling(jobUuid);
+    } catch (e) { setBulkError(e.response?.data?.message || 'Failed to start bulk job'); }
+    finally { setBulkSubmitting(false); }
+  };
+
+  // ── Bulk: poll progress ───────────────────────────────────────────────────
+  const startPolling = (jobUuid) => {
+    if (pollRef.current[jobUuid]) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await axiosInstance.get(`/documents/bulk/${jobUuid}`);
+        const data = res.data;
+        setBulkJobs(prev => prev.map(j => j.jobUuid === jobUuid ? { ...j, ...data } : j));
+        if (data.status === 'done' || data.status === 'error') {
+          clearInterval(pollRef.current[jobUuid]);
+          delete pollRef.current[jobUuid];
+        }
+      } catch {
+        clearInterval(pollRef.current[jobUuid]);
+        delete pollRef.current[jobUuid];
+      }
+    }, 2000);
+    pollRef.current[jobUuid] = interval;
+  };
+
+  // ── Bulk: download zip ────────────────────────────────────────────────────
+  const downloadBulkZip = async (jobUuid) => {
+    try {
+      const res = await axiosInstance.get(`/documents/bulk/${jobUuid}/download`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a   = document.createElement('a');
+      a.href = url; a.download = `${jobUuid}.zip`; a.click();
+      URL.revokeObjectURL(url);
+    } catch { alert('Download failed — job may not be complete yet'); }
+  };
+
   const filteredDocs = recentDocs.filter(d =>
     d.doc_uuid.toLowerCase().includes(search.toLowerCase()) ||
     (d.template_name || '').toLowerCase().includes(search.toLowerCase())
@@ -96,30 +262,58 @@ export default function GenerateDocPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Generate Document</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Select a template, fill the fields, preview and generate a PDF</p>
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Generate Document</h1>
+        <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+          Single or bulk PDF generation from templates
+        </p>
       </div>
 
-      {/* Steps */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
-        <div className="flex items-center gap-3">
-          <StepBadge step={1} label="Select Template" active={step === 1} done={step > 1} />
-          <div className={`flex-1 h-px ${step > 1 ? 'bg-emerald-300' : 'bg-gray-100'}`} />
-          <StepBadge step={2} label="Fill Data" active={step === 2} done={step > 2} />
-          <div className={`flex-1 h-px ${step > 2 ? 'bg-emerald-300' : 'bg-gray-100'}`} />
-          <StepBadge step={3} label="Generated" active={step === 3} done={false} />
-        </div>
+      {/* Tab switcher */}
+      <div className="flex gap-1 bg-[var(--color-surface-raised)] p-1 rounded-xl w-fit border border-[var(--color-border)]">
+        {[
+          { key: 'single', label: 'Single Document', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+          { key: 'bulk',   label: 'Bulk Generation', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all
+              ${activeTab === tab.key
+                ? 'bg-[var(--color-surface)] text-[#3b5bdb] shadow-sm border border-[var(--color-border)]'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+              }`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={tab.icon}/>
+            </svg>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
-          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-          {error}
-        </div>
-      )}
-
+      {/* ════════════════════════════════════════════════════
+          SINGLE GENERATION
+      ════════════════════════════════════════════════════ */}
+      {activeTab === 'single' && (
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <div className="xl:col-span-2 space-y-4">
+
+          {/* Steps */}
+          <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm px-6 py-4">
+            <div className="flex items-center gap-3">
+              <StepBadge step={1} label="Select Template" active={step === 1} done={step > 1}/>
+              <div className={`flex-1 h-px ${step > 1 ? 'bg-emerald-300' : 'bg-[var(--color-border)]'}`}/>
+              <StepBadge step={2} label="Fill Data" active={step === 2} done={step > 2}/>
+              <div className={`flex-1 h-px ${step > 2 ? 'bg-emerald-300' : 'bg-[var(--color-border)]'}`}/>
+              <StepBadge step={3} label="Generated" active={step === 3} done={false}/>
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+              </svg>
+              {error}
+            </div>
+          )}
 
           {/* Step 1 */}
           <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${step === 1 ? 'border-blue-100' : 'border-gray-100'}`}>
@@ -328,6 +522,192 @@ export default function GenerateDocPage() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════
+          BULK GENERATION
+      ════════════════════════════════════════════════════ */}
+      {activeTab === 'bulk' && (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+          <div className="xl:col-span-2 space-y-4">
+
+            {/* Template selector */}
+            <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 space-y-4">
+              <div>
+                <h2 className="text-sm font-bold text-[var(--color-text-primary)]">Step 1 — Select Template</h2>
+                <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                  All records in the CSV will use this template
+                </p>
+              </div>
+              <select value={bulkTemplateId} onChange={e => setBulkTemplate(e.target.value)}
+                className="w-full border border-[var(--color-border)] rounded-xl px-3.5 py-2.5 text-sm
+                  bg-[var(--color-bg)] text-[var(--color-text-primary)]
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="">— Choose a template —</option>
+                {templates.map(t => (
+                  <option key={t.id} value={t.id}>{t.name} ({t.category}) v{t.version}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* CSV input */}
+            <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-sm font-bold text-[var(--color-text-primary)]">Step 2 — Upload or Paste CSV</h2>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                    First row must be headers. Include a{' '}
+                    <code className="bg-[var(--color-surface-raised)] px-1 rounded text-[10px]">record_identifier</code> column.
+                  </p>
+                </div>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-[#3b5bdb]
+                  bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg cursor-pointer
+                  hover:bg-indigo-100 transition-colors flex-shrink-0">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                  </svg>
+                  Upload CSV
+                  <input type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvFile}/>
+                </label>
+              </div>
+
+              <textarea
+                value={bulkRecords}
+                onChange={e => handleCsvChange(e.target.value)}
+                rows={8}
+                placeholder={`record_identifier,employee_name,department,salary\nEMP-001,Abebe Bekele,Engineering,45000\nEMP-002,Tigist Haile,Finance,38000`}
+                className="w-full border border-[var(--color-border)] rounded-xl px-4 py-3 text-xs font-mono
+                  bg-[var(--color-bg)] text-[var(--color-text-primary)]
+                  placeholder-[var(--color-text-secondary)]
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400
+                  transition resize-none"
+              />
+
+              {bulkError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-3 rounded-xl flex items-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                  </svg>
+                  {bulkError}
+                </div>
+              )}
+
+              {/* CSV row preview */}
+              {bulkParsed && (
+                <div className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+                  <div className="px-4 py-2.5 bg-[var(--color-surface-raised)] border-b border-[var(--color-border)]
+                    flex items-center justify-between">
+                    <p className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                      Preview — {bulkParsed.rows.length} records
+                    </p>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full">
+                      Valid CSV
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto max-h-40">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-[var(--color-surface-raised)] border-b border-[var(--color-border)]">
+                          {bulkParsed.headers.map(h => (
+                            <th key={h} className="px-3 py-2 text-left font-semibold
+                              text-[var(--color-text-secondary)] whitespace-nowrap">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--color-border)]">
+                        {bulkParsed.rows.slice(0, 5).map((r, i) => (
+                          <tr key={i} className="hover:bg-[var(--color-surface-raised)]">
+                            {bulkParsed.headers.map(h => (
+                              <td key={h} className="px-3 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">
+                                {r.data[h] || '—'}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                        {bulkParsed.rows.length > 5 && (
+                          <tr>
+                            <td colSpan={bulkParsed.headers.length}
+                              className="px-3 py-2 text-[var(--color-text-secondary)] text-center italic">
+                              … and {bulkParsed.rows.length - 5} more rows
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <button onClick={submitBulkJob}
+                disabled={!bulkTemplateId || !bulkParsed || bulkSubmitting}
+                className="w-full flex items-center justify-center gap-2
+                  bg-[#3b5bdb] hover:bg-[#2f4ac4] text-white text-sm font-bold
+                  py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed
+                  transition-colors shadow-sm shadow-indigo-200">
+                {bulkSubmitting
+                  ? <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>Starting job…</>
+                  : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                      </svg>
+                      Generate {bulkParsed?.rows?.length || 0} Documents in Background
+                    </>
+                }
+              </button>
+            </div>
+          </div>
+
+          {/* Right — job progress list */}
+          <div className="space-y-4">
+            <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5">
+              <p className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-4">
+                Bulk Jobs
+              </p>
+              {bulkJobs.length === 0 ? (
+                <div className="text-center py-8">
+                  <svg className="w-8 h-8 text-[var(--color-border)] mx-auto mb-2"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                  </svg>
+                  <p className="text-xs text-[var(--color-text-secondary)]">No bulk jobs yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto scrollbar-none">
+                  {bulkJobs.map(job => (
+                    <BulkJobCard key={job.jobUuid} job={job} onDownload={downloadBulkZip}/>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* How-to info card */}
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 space-y-2">
+              <p className="text-xs font-bold text-[#3b5bdb] uppercase tracking-wide">How bulk works</p>
+              {[
+                'Upload a CSV with one record per row',
+                'Each row generates one PDF in the background',
+                'Progress updates every 2 seconds automatically',
+                'Download all PDFs as a single .zip when done',
+                'Max 500 records per job',
+              ].map((s, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#3b5bdb] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[8px] font-bold text-white">{i + 1}</span>
+                  </div>
+                  <p className="text-xs text-[#3b5bdb]/80">{s}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

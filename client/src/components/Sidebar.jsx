@@ -1,14 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { navGroups } from '../config/navConfig.js';
-
-// Soft white internal theme
-// Sidebar bg   : #ffffff  (pure white)
-// Border       : #f0f0f4  (soft divider)
-// Active bg    : #f0f4ff  (soft blue-tinted wash)
-// Active text  : #3b5bdb  (neutral indigo)
-// Muted text   : #8a8fa8
-// Hover bg     : #f5f6fa
+import { useTranslation } from 'react-i18next';
 
 const ICONS = {
   home: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-[18px] h-[18px]"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>,
@@ -26,30 +19,31 @@ const ICONS = {
 };
 
 function NavItem({ item, collapsed }) {
+  const { t } = useTranslation();
   return (
     <NavLink
       to={item.to}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? t(`nav.${item.translationKey}`) : undefined}
       className={({ isActive }) =>
         `flex items-center rounded-xl text-[13px] font-medium transition-all duration-150 group
         ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2'}
         ${isActive
-          ? 'bg-[#eef2ff] text-[#3b5bdb]'
-          : 'text-[#8a8fa8] hover:bg-[#f5f6fa] hover:text-[#374151]'
+          ? 'bg-indigo-50 text-[#3b5bdb]'
+          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text-primary)]'
         }`
       }
     >
       {({ isActive }) => (
         <>
           <span className={`flex-shrink-0 transition-colors
-            ${isActive ? 'text-[#3b5bdb]' : 'text-[#b0b7c9] group-hover:text-[#6b7280]'}`}>
+            ${isActive ? 'text-[#3b5bdb]' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}`}>
             {ICONS[item.icon]}
           </span>
           {!collapsed && (
-            <span className="truncate leading-tight">{item.label}</span>
+            <span className="truncate leading-tight">{t(`nav.${item.translationKey}`)}</span>
           )}
           {!collapsed && isActive && (
-            <span className="ml-auto w-1 h-4 rounded-full bg-[#3b5bdb] flex-shrink-0" />
+            <span className="ml-auto w-1 h-4 rounded-full bg-[#3b5bdb] flex-shrink-0"/>
           )}
         </>
       )}
@@ -59,91 +53,94 @@ function NavItem({ item, collapsed }) {
 
 export default function Sidebar({ collapsed, setCollapsed }) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const { t }            = useTranslation();
+  const navigate         = useNavigate();
+  const handleLogout     = () => { logout(); navigate('/login'); };
 
   const visibleGroups = navGroups
     .map(g => ({ ...g, items: g.items.filter(i => i.roles.includes(user?.role)) }))
     .filter(g => g.items.length > 0);
 
   return (
-    <aside
-      className={`
-        ${collapsed ? 'w-[68px]' : 'w-[240px]'}
-        flex-shrink-0 h-screen
-        bg-white border-r border-[#f0f0f4]
-        flex flex-col
-        transition-[width] duration-300 ease-in-out relative
-        shadow-sm
-      `}
-    >
-      {/* ── Logo ─────────────────────────────────────────── */}
-      <div className={`flex items-center h-16 border-b border-[#f0f0f4] flex-shrink-0
+    <aside className={`
+      ${collapsed ? 'w-[68px]' : 'w-[240px]'}
+      flex-shrink-0 h-screen
+      bg-[var(--color-surface)] border-r border-[var(--color-border)]
+      flex flex-col
+      transition-[width,background-color,border-color] duration-300 ease-in-out relative
+      shadow-sm
+    `}>
+
+      {/* ── Logo ──────────────────────────────────────── */}
+      <div className={`flex items-center h-16 border-b border-[var(--color-border)] flex-shrink-0
         ${collapsed ? 'justify-center' : 'px-4 gap-3'}`}>
         <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0
-          border border-gray-100 flex items-center justify-center bg-gray-50">
-          <img src="/logo.png" alt="Logo" className="w-7 h-7 object-contain" />
+          border border-[var(--color-border)] flex items-center justify-center
+          bg-[var(--color-surface-raised)]">
+          <img src="/logo.png" alt="Logo" className="w-7 h-7 object-contain"/>
         </div>
         {!collapsed && (
           <div className="overflow-hidden leading-tight">
-            <p className="text-gray-800 font-bold text-[13px] tracking-tight">Document Engine</p>
-            <p className="text-[10px] text-gray-400 font-medium">Management System</p>
+            <p className="text-[var(--color-text-primary)] font-bold text-[13px] tracking-tight">
+              Document Engine
+            </p>
+            <p className="text-[10px] text-[var(--color-text-secondary)] font-medium">
+              Management System
+            </p>
           </div>
         )}
       </div>
 
-      {/* ── Collapse toggle ───────────────────────────────── */}
+      {/* ── Collapse toggle ───────────────────────────── */}
       <button
         onClick={() => setCollapsed(c => !c)}
         className="absolute -right-3 top-[30px] w-6 h-6 rounded-full
-          bg-white border border-[#e5e7eb]
+          bg-[var(--color-surface)] border border-[var(--color-border)]
           flex items-center justify-center
-          text-gray-400 hover:text-gray-600 hover:border-gray-300
+          text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]
+          hover:border-[var(--color-text-secondary)]
           transition-colors z-20 shadow-sm"
       >
-        <svg
-          className={`w-3 h-3 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`}
-          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        <svg className={`w-3 h-3 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
         </svg>
       </button>
 
-      {/* ── Nav — scrolls independently from the account footer ── */}
-      <nav className="flex-1 flex flex-col justify-between py-3 px-2 min-h-0 overflow-y-auto">
+      {/* ── Nav ───────────────────────────────────────── */}
+      <nav className="flex-1 flex flex-col justify-between py-3 px-2 min-h-0 overflow-y-auto scrollbar-none">
         <div className="space-y-0.5">
           {visibleGroups.map((group, gi) => (
             <div key={group.group} className={gi > 0 ? 'pt-3' : ''}>
               {/* Group label */}
               {!collapsed ? (
-                <p className="text-[9px] font-bold text-gray-300 uppercase tracking-[0.14em]
-                  px-3 pb-1.5 pt-0.5">
-                  {group.group}
+                <p className="text-[9px] font-bold text-[var(--color-text-secondary)]
+                  uppercase tracking-[0.14em] px-3 pb-1.5 pt-0.5 opacity-60">
+                  {t(`nav.${group.translationKey}`)}
                 </p>
               ) : (
                 gi > 0 && (
                   <div className="py-1.5 flex justify-center">
-                    <div className="w-5 h-px bg-gray-100" />
+                    <div className="w-5 h-px bg-[var(--color-border)]"/>
                   </div>
                 )
               )}
-              {/* Items */}
               <div className="space-y-0.5">
                 {group.items.map(item => (
-                  <NavItem key={item.to} item={item} collapsed={collapsed} />
+                  <NavItem key={item.to} item={item} collapsed={collapsed}/>
                 ))}
               </div>
             </div>
           ))}
         </div>
-        <div />
+        <div/>
       </nav>
 
-      {/* ── User card + Sign Out ──────────────────────────── */}
-      <div className="border-t border-[#f0f0f4] px-2 py-3 flex-shrink-0 space-y-1">
+      {/* ── User card + Sign Out ──────────────────────── */}
+      <div className="border-t border-[var(--color-border)] px-2 py-3 flex-shrink-0 space-y-1">
         {!collapsed && (
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl
-            bg-[#f8f9fc] border border-gray-100 mb-1">
+            bg-[var(--color-surface-raised)] border border-[var(--color-border)] mb-1">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500
               flex items-center justify-center flex-shrink-0 shadow-sm">
               <span className="text-[11px] font-bold text-white">
@@ -151,8 +148,10 @@ export default function Sidebar({ collapsed, setCollapsed }) {
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold text-gray-700 truncate">{user?.full_name}</p>
-              <p className="text-[10px] text-gray-400 capitalize truncate">
+              <p className="text-[12px] font-semibold text-[var(--color-text-primary)] truncate">
+                {user?.full_name}
+              </p>
+              <p className="text-[10px] text-[var(--color-text-secondary)] capitalize truncate">
                 {user?.role?.replace(/_/g, ' ')}
               </p>
             </div>
@@ -160,13 +159,15 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         )}
         <button
           onClick={handleLogout}
-          title={collapsed ? 'Sign Out' : undefined}
-          className={`flex items-center rounded-xl text-[13px] text-gray-400
-            hover:bg-red-50 hover:text-red-500 transition-colors w-full
+          title={collapsed ? t('actions.signOut') : undefined}
+          className={`flex items-center rounded-xl text-[13px]
+            text-[var(--color-text-secondary)]
+            hover:bg-red-50 hover:text-red-500
+            transition-colors w-full
             ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2'}`}
         >
           {ICONS.logout}
-          {!collapsed && <span>Sign Out</span>}
+          {!collapsed && <span>{t('actions.signOut')}</span>}
         </button>
       </div>
     </aside>

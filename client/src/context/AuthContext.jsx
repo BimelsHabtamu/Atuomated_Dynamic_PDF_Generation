@@ -1,18 +1,38 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import i18n from '../i18n';
+import { resolveAndApplyPreferences } from './ThemeContext.jsx';
 
 const AuthContext = createContext(null);
 
+/**
+ * Apply a user's stored language + theme preferences immediately.
+ * Called both on initial load (from localStorage) and after login.
+ */
+function applyUserPreferences(userData) {
+  if (!userData) return;
+  // Language
+  if (userData.language) {
+    i18n.changeLanguage(userData.language);
+  }
+  // Theme — delegate to ThemeContext helper so the DOM is updated consistently
+  if (userData.theme) {
+    resolveAndApplyPreferences(userData.theme);
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser]   = useState(null);
+  const [user,  setUser]  = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // On first load: decode token if it exists
+  // Restore session on first load and apply preferences
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedUser  = localStorage.getItem('user');
     if (savedToken && savedUser) {
+      const parsed = JSON.parse(savedUser);
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      setUser(parsed);
+      applyUserPreferences(parsed);
     }
   }, []);
 
@@ -21,6 +41,8 @@ export function AuthProvider({ children }) {
     localStorage.setItem('user', JSON.stringify(userData));
     setToken(jwtToken);
     setUser(userData);
+    // Sync language + theme from the server-side user record
+    applyUserPreferences(userData);
   };
 
   const logout = () => {
@@ -43,7 +65,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// Custom hook for easy use
 export function useAuth() {
   return useContext(AuthContext);
 }

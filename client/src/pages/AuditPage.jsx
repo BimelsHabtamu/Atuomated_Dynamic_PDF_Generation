@@ -64,10 +64,43 @@ export default function AuditPage() {
           <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
           <p className="text-sm text-gray-400 mt-0.5">Immutable forensic log — read only</p>
         </div>
-        <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-          Read Only
-        </span>
+        <div className="flex items-center gap-2">
+          {/* FR-038: CSV Export */}
+          <button
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (actionFilter !== 'all') params.append('action', actionFilter);
+              if (fromDate) params.append('from_date', fromDate);
+              if (toDate)   params.append('to_date', toDate);
+              const token = localStorage.getItem('token');
+              const url = `/api/audit/export/csv?${params}`;
+              // Use fetch to send auth header, then trigger download
+              fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+                .then(r => r.blob())
+                .then(blob => {
+                  const a = document.createElement('a');
+                  a.href = URL.createObjectURL(blob);
+                  a.download = `docuvault-export-${new Date().toISOString().slice(0,10)}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                })
+                .catch(() => alert('Export failed'));
+            }}
+            className="flex items-center gap-1.5 text-xs font-semibold
+              bg-emerald-600 hover:bg-emerald-700 text-white
+              px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export CSV
+          </button>
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            Read Only
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">

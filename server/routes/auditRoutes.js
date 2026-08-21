@@ -6,9 +6,10 @@ const ctrl    = require('../controllers/auditController');
 
 const admins = role('super_admin', 'system_admin');
 
-router.get('/dashboard', auth,        ctrl.getDashboard);
-router.get('/logs',      auth, admins, ctrl.getAllAuditLogs);
-router.get('/search',    auth, admins, ctrl.searchDocuments);
-router.get('/:doc_id',   auth, admins, ctrl.getAuditTrail);
+router.get('/dashboard',    auth,        ctrl.getDashboard);
+router.get('/logs',         auth, admins, ctrl.getAllAuditLogs);
+router.get('/search',       auth, admins, ctrl.searchDocuments);
+router.get('/export/csv',   auth, admins, ctrl.exportDocumentsCsv);   // FR-038
+router.get('/:doc_id',      auth, admins, ctrl.getAuditTrail);
 
 module.exports = router;

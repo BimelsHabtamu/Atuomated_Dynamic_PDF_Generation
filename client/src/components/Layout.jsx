@@ -8,7 +8,7 @@ export default function Layout() {
   const [mobileOpen, setMobile]   = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#f7f8fc] overflow-hidden">
+    <div className="flex h-screen bg-[var(--color-bg)] overflow-hidden">
 
       {/* Mobile overlay */}
       {mobileOpen && (

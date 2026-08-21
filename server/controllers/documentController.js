@@ -30,7 +30,7 @@ exports.generateDocument = async (req, res) => {
   const verifyBase = process.env.CLIENT_URL || 'http://localhost:5174';
 
   try {
-    const { filePath, hash } = await generatePDF(template, data || {}, docUuid, verifyBase, PDF_DIR);
+    const { filePath, hash } = await generatePDF(template, data || {}, docUuid, verifyBase, PDF_DIR, 'draft', { db });
     const relativePath = path.relative(path.join(__dirname, '..'), filePath);
     const namedPath    = path.join(PDF_DIR, fileName);
     require('fs').renameSync(filePath, namedPath);
@@ -53,12 +53,20 @@ exports.generateDocument = async (req, res) => {
 };
 
 exports.getDocuments = async (req, res) => {
+  const { role, id: userId } = req.user;
+  // Role-scoped query: admins see all, others see only their own docs
+  const isAdmin = role === 'super_admin' || role === 'system_admin';
+  const whereClause = isAdmin ? '' : 'WHERE gd.generated_by = ?';
+  const params = isAdmin ? [] : [userId];
+
   const [rows] = await db.query(
     `SELECT gd.*, t.name AS template_name, u.full_name AS generated_by_name
      FROM generated_docs gd
      JOIN templates t ON t.id = gd.template_id
      JOIN users u ON u.id = gd.generated_by
-     ORDER BY gd.generated_at DESC`
+     ${whereClause}
+     ORDER BY gd.generated_at DESC`,
+    params
   );
   res.json(rows);
 };
@@ -89,4 +97,24 @@ exports.downloadDocument = async (req, res) => {
     [req.user.id, doc.id, 'DELIVER', JSON.stringify({ event: 'manual_download' }), req.ip, req.headers['user-agent']]
   );
   res.download(fullPath, `${doc.doc_uuid}.pdf`);
+};
+
+// FR-031: Admin can mark a signed doc as hand-delivered
+exports.markHandDelivered = async (req, res) => {
+  const { id } = req.params;
+  const [rows] = await db.query('SELECT * FROM generated_docs WHERE id = ?', [id]);
+  if (rows.length === 0) return res.status(404).json({ message: 'Document not found' });
+
+  const doc = rows[0];
+  if (doc.status !== 'signed' && doc.status !== 'delivered') {
+    return res.status(400).json({ message: 'Document must be signed before marking as hand-delivered' });
+  }
+
+  await db.query('UPDATE generated_docs SET status = ? WHERE id = ?', ['hand_delivered', id]);
+  await db.query(
+    'INSERT INTO audit_logs (user_id, doc_id, action, action_details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+    [req.user.id, id, 'DELIVER', JSON.stringify({ event: 'hand_delivered' }), req.ip, req.headers['user-agent']]
+  );
+
+  res.json({ message: 'Document marked as hand-delivered' });
 };

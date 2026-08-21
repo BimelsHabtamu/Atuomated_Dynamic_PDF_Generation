@@ -104,3 +104,73 @@ exports.uploadTemplateImage = async (req, res) => {
     fullUrl: `http://localhost:${process.env.PORT || 5000}${relativePath}`,
   });
 };
+
+// ── POST /templates/:id/preview-pdf — generate a real sample PDF ──────────────
+// Used by the template editor "Download Preview PDF" button.
+// Injects SAMPLE data so the template designer can see the final result.
+exports.previewTemplatePdf = async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM templates WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Template not found' });
+
+    const template = rows[0];
+    const { generatePDF } = require('../services/pdfService');
+
+    // Sample data that covers all common placeholders
+    const sampleData = {
+      'employee.full_name':    'Sara Ahmed (Preview)',
+      'employee.position':     'HR Manager',
+      'employee.department':   'Human Resources',
+      'employee.email':        'sara@company.com',
+      'employee.phone':        '+251 912 345 678',
+      'employee.id':           'EMP-0042',
+      'employee.join_date':    '01 Jan 2022',
+      'finance.salary':        'ETB 45,000',
+      'finance.currency':      'ETB',
+      'finance.pay_date':      new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      'finance.bank_name':     'Commercial Bank of Ethiopia',
+      'finance.account_number':'1000123456789',
+      'student.full_name':     'Abebe Bekele (Preview)',
+      'student.id':            'STU-2026-001',
+      'student.program':       'Computer Science',
+      'student.gpa':           '3.85',
+      'student.year':          'Final Year',
+      'supplier.name':         'Addis Supplies PLC (Preview)',
+      'supplier.tin':          'TIN-12345678',
+      'effective_date':        new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    };
+
+    const path     = require('path');
+    const os       = require('os');
+    const docUuid  = `PREVIEW-${Date.now()}`;
+    const outDir   = os.tmpdir();
+    const verifyBase = process.env.CLIENT_URL || 'http://localhost:5173';
+
+    const { filePath } = await generatePDF(
+      template,
+      sampleData,
+      docUuid,
+      verifyBase,
+      outDir,
+      'draft',
+      { db }
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="preview-${template.name.replace(/[^a-z0-9]/gi, '_')}.pdf"`);
+
+    const fs = require('fs');
+    const stream = fs.createReadStream(filePath);
+    stream.pipe(res);
+    stream.on('end', () => {
+      // Clean up temp file after sending
+      fs.unlink(filePath, () => {});
+    });
+    stream.on('error', (err) => {
+      res.status(500).json({ message: 'Failed to stream PDF', error: err.message });
+    });
+  } catch (err) {
+    console.error('[previewTemplatePdf]', err.message);
+    res.status(500).json({ message: 'PDF preview generation failed', error: err.message });
+  }
+};

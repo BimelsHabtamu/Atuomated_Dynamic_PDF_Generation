@@ -5,9 +5,15 @@ import Modal         from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { SkeletonTableRow } from '../components/ui/Skeleton';
 
-const ROLES     = ['admin','generator','approver','recipient'];
-const ROLE_META = { admin: 'bg-purple-100 text-purple-700', generator: 'bg-blue-100 text-blue-700', approver: 'bg-yellow-100 text-yellow-700', recipient: 'bg-gray-100 text-gray-600' };
-const EMPTY     = { full_name: '', email: '', phone: '', role: 'generator', password: '', is_active: true };
+const ROLES     = ['super_admin', 'system_admin', 'generator', 'approver', 'recipient'];
+const ROLE_META = {
+  super_admin:  'bg-purple-100 text-purple-700',
+  system_admin: 'bg-indigo-100 text-indigo-700',
+  generator:    'bg-blue-100 text-blue-700',
+  approver:     'bg-yellow-100 text-yellow-700',
+  recipient:    'bg-gray-100 text-gray-600',
+};
+const EMPTY = { full_name: '', email: '', phone: '', department: '', role: 'generator', password: '', is_active: true };
 
 function fmt(d) { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
 
@@ -36,24 +42,71 @@ export default function UsersPage() {
     return ms && mr && mst;
   }), [users, search, roleFilter, statusFilter]);
 
-  const counts = useMemo(() => ({ total: users.length, active: users.filter(u => u.is_active).length, inactive: users.filter(u => !u.is_active).length, admins: users.filter(u => u.role === 'admin').length }), [users]);
+  const counts = useMemo(() => ({
+    total:    users.length,
+    active:   users.filter(u => u.is_active).length,
+    inactive: users.filter(u => !u.is_active).length,
+    admins:   users.filter(u => u.role === 'super_admin' || u.role === 'system_admin').length,
+  }), [users]);
 
   const openCreate = () => { setEditTarget(null); setForm(EMPTY); setModalOpen(true); };
-  const openEdit   = u  => { setEditTarget(u); setForm({ full_name: u.full_name, email: u.email, phone: u.phone || '', role: u.role, password: '', is_active: u.is_active }); setModalOpen(true); };
+  const openEdit = u => {
+    setEditTarget(u);
+    setForm({
+      full_name:  u.full_name,
+      email:      u.email,
+      phone:      u.phone      || '',
+      department: u.department || '',
+      role:       u.role,
+      password:   '',
+      is_active:  u.is_active,
+    });
+    setModalOpen(true);
+  };
 
   const handleSave = async () => {
     if (!form.full_name.trim() || !form.email.trim()) return;
     setSaving(true);
     try {
-      if (editTarget) { await axiosInstance.put(`/users/${editTarget.id}`, { full_name: form.full_name, department: form.phone, is_active: form.is_active ? 1 : 0 }); notify('User updated'); }
-      else            { await axiosInstance.post('/users', form); notify('User created'); }
+      if (editTarget) {
+        await axiosInstance.put(`/users/${editTarget.id}`, {
+          full_name:  form.full_name,
+          phone:      form.phone,
+          department: form.department,
+          is_active:  form.is_active ? 1 : 0,
+        });
+        // Role change is a separate endpoint
+        if (form.role !== editTarget.role) {
+          await axiosInstance.patch(`/users/${editTarget.id}/role`, { role: form.role });
+        }
+        notify('User updated');
+      } else {
+        await axiosInstance.post('/users', form);
+        notify('User created');
+      }
       setModalOpen(false); load();
     } catch (e) { notify(e.response?.data?.message || 'Save failed', 'error'); }
     finally { setSaving(false); }
   };
 
-  const handleDelete   = async () => { try { await axiosInstance.delete(`/users/${deleteTarget.id}`); notify('User deleted'); setDelete(null); load(); } catch (e) { notify(e.response?.data?.message || 'Delete failed', 'error'); setDelete(null); } };
-  const toggleActive   = async u  => { try { await axiosInstance.put(`/users/${u.id}`, { full_name: u.full_name, is_active: u.is_active ? 0 : 1 }); load(); } catch (e) { notify('Update failed', 'error'); } };
+  const handleDelete = async () => {
+    try {
+      await axiosInstance.delete(`/users/${deleteTarget.id}`);
+      notify('User deleted'); setDelete(null); load();
+    } catch (e) { notify(e.response?.data?.message || 'Delete failed', 'error'); setDelete(null); }
+  };
+
+  const toggleActive = async (u) => {
+    try {
+      await axiosInstance.put(`/users/${u.id}`, {
+        full_name:  u.full_name,
+        phone:      u.phone      || null,
+        department: u.department || null,
+        is_active:  u.is_active ? 0 : 1,
+      });
+      load();
+    } catch (e) { notify('Update failed', 'error'); }
+  };
 
   return (
     <div className="space-y-5">
@@ -149,13 +202,38 @@ export default function UsersPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Phone</label>
-              <input value={form.phone} onChange={e => setForm(f => ({...f,phone:e.target.value}))} className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition" />
+              <input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}
+                placeholder="+251 9..."
+                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition" />
             </div>
             <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Department</label>
+              <input value={form.department} onChange={e => setForm(f => ({...f, department: e.target.value}))}
+                placeholder="e.g. Finance"
+                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Role *</label>
-              <select value={form.role} onChange={e => setForm(f => ({...f,role:e.target.value}))} className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white capitalize">
-                {ROLES.map(r => <option key={r}>{r}</option>)}
+              <select value={form.role} onChange={e => setForm(f => ({...f, role: e.target.value}))}
+                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-white capitalize">
+                {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Status</label>
+              <div className="flex gap-4 mt-2.5">
+                {[true, false].map(v => (
+                  <label key={String(v)} className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" checked={form.is_active === v}
+                      onChange={() => setForm(f => ({...f, is_active: v}))}
+                      className="accent-blue-600"/>
+                    <span className="text-sm text-gray-700">{v ? 'Active' : 'Inactive'}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           {!editTarget && (
@@ -164,10 +242,6 @@ export default function UsersPage() {
               <input type="password" value={form.password} onChange={e => setForm(f => ({...f,password:e.target.value}))} className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition" />
             </div>
           )}
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Status</label>
-            <div className="flex gap-4">{[true,false].map(v => <label key={String(v)} className="flex items-center gap-2 cursor-pointer"><input type="radio" checked={form.is_active === v} onChange={() => setForm(f => ({...f,is_active:v}))} className="accent-blue-600"/><span className="text-sm text-gray-700">{v ? 'Active' : 'Inactive'}</span></label>)}</div>
-          </div>
         </div>
         <div className="flex gap-3 mt-6 pt-5 border-t border-gray-100">
           <button onClick={() => setModalOpen(false)} className="flex-1 bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>

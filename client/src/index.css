@@ -1,5 +1,41 @@
 @import "tailwindcss";
 
+:root {
+  --color-bg: #f7f8fc;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f8f9fc;
+  --color-border: #e5e7eb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-accent: #3b5bdb;
+}
+
+[data-theme="dark"] {
+  --color-bg: #0b1220;
+  --color-surface: #111827;
+  --color-surface-raised: #1a2333;
+  --color-border: #263449;
+  --color-text-primary: #e5e9f0;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #7a9af5;
+  color-scheme: dark;
+}
+
+html, body, #root { min-height: 100%; }
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+[data-theme="dark"] .bg-white { background-color: var(--color-surface); }
+[data-theme="dark"] .bg-gray-50, [data-theme="dark"] .bg-\[#f7f8fc\], [data-theme="dark"] .bg-\[#f8f9fc\] { background-color: var(--color-surface-raised); }
+[data-theme="dark"] .border-gray-100, [data-theme="dark"] .border-gray-200, [data-theme="dark"] .border-\[#f0f0f4\] { border-color: var(--color-border); }
+[data-theme="dark"] .text-gray-900, [data-theme="dark"] .text-gray-800, [data-theme="dark"] .text-gray-700 { color: var(--color-text-primary); }
+[data-theme="dark"] .text-gray-600, [data-theme="dark"] .text-gray-500, [data-theme="dark"] .text-gray-400 { color: var(--color-text-secondary); }
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea { background-color: var(--color-surface); color: var(--color-text-primary); border-color: var(--color-border); }
+
+[lang="am"] body { font-family: "Noto Sans Ethiopic", "Segoe UI", sans-serif; }
+
 /* Hide scrollbar */
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }

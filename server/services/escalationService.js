@@ -1,17 +1,27 @@
 const db = require('../config/db');
 const { send24hrReminderEmail, send72hrEscalationEmail } = require('./emailService');
 
+/**
+ * FR-027: Check pending signature requests and send escalation emails.
+ *
+ * Rules:
+ *   >= 24h and reminder_24h_sent_at IS NULL  → send 24hr reminder (once only)
+ *   >= 72h and escalation_72h_sent_at IS NULL → send 72hr escalation (once only)
+ *
+ * The sent_at timestamps prevent repeat-fire on every hourly tick.
+ */
 async function checkEscalations() {
   try {
     const [pending] = await db.query(`
       SELECT sr.id, sr.doc_id, sr.created_at,
-             a.email AS approver_email, a.full_name AS approver_name,
+             sr.reminder_24h_sent_at, sr.escalation_72h_sent_at,
+             a.email AS approver_email,  a.full_name AS approver_name,
              g.email AS generator_email, g.full_name AS generator_name,
              gd.doc_uuid
       FROM signature_requests sr
-      JOIN users a  ON a.id  = sr.approver_id
+      JOIN users a        ON a.id  = sr.approver_id
       JOIN generated_docs gd ON gd.id = sr.doc_id
-      JOIN users g  ON g.id  = gd.generated_by
+      JOIN users g        ON g.id  = gd.generated_by
       WHERE sr.status = 'pending'
     `);
 
@@ -20,24 +30,44 @@ async function checkEscalations() {
     for (const req of pending) {
       const ageHours = (now - new Date(req.created_at).getTime()) / (1000 * 60 * 60);
 
-      if (ageHours >= 72) {
-        await send72hrEscalationEmail(req.approver_email,  req.approver_name,  req.doc_uuid, 'approver');
-        await send72hrEscalationEmail(req.generator_email, req.generator_name, req.doc_uuid, 'generator');
-        console.log(`[Escalation] 72hr escalation sent for ${req.doc_uuid}`);
-      } else if (ageHours >= 24 && ageHours < 25) {
-        await send24hrReminderEmail(req.approver_email, req.approver_name, req.doc_uuid);
-        console.log(`[Escalation] 24hr reminder sent for ${req.doc_uuid}`);
+      // ── 72-hour escalation (sent once) ──────────────────────────────
+      if (ageHours >= 72 && !req.escalation_72h_sent_at) {
+        try {
+          await send72hrEscalationEmail(req.approver_email,  req.approver_name,  req.doc_uuid, 'approver');
+          await send72hrEscalationEmail(req.generator_email, req.generator_name, req.doc_uuid, 'generator');
+          await db.query(
+            'UPDATE signature_requests SET escalation_72h_sent_at = NOW() WHERE id = ?',
+            [req.id]
+          );
+          console.log(`[Escalation] 72hr sent for ${req.doc_uuid}`);
+        } catch (emailErr) {
+          console.error(`[Escalation] 72hr email failed for ${req.doc_uuid}:`, emailErr.message);
+        }
+      }
+
+      // ── 24-hour reminder (sent once, only if 72hr not already fired) ─
+      if (ageHours >= 24 && !req.reminder_24h_sent_at && !req.escalation_72h_sent_at) {
+        try {
+          await send24hrReminderEmail(req.approver_email, req.approver_name, req.doc_uuid);
+          await db.query(
+            'UPDATE signature_requests SET reminder_24h_sent_at = NOW() WHERE id = ?',
+            [req.id]
+          );
+          console.log(`[Escalation] 24hr reminder sent for ${req.doc_uuid}`);
+        } catch (emailErr) {
+          console.error(`[Escalation] 24hr email failed for ${req.doc_uuid}:`, emailErr.message);
+        }
       }
     }
   } catch (err) {
-    console.error('[Escalation] Error:', err.message);
+    console.error('[Escalation] Job error:', err.message);
   }
 }
 
 function startEscalationJob() {
-  console.log('[Escalation] Job started — checking every hour');
-  checkEscalations();
-  setInterval(checkEscalations, 60 * 60 * 1000);
+  console.log('[Escalation] Job started — checking every 60 minutes');
+  checkEscalations(); // run immediately on startup
+  setInterval(checkEscalations, 60 * 60 * 1000); // then every hour
 }
 
-module.exports = { startEscalationJob };
+module.exports = { startEscalationJob, checkEscalations };

@@ -1,10 +1,12 @@
 const db     = require('../config/db');
 const bcrypt = require('bcryptjs');
+const fs     = require('fs');
+const path   = require('path');
 
 exports.getMySettings = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT id, full_name, email, phone, avatar_url, role, department,
+      `SELECT id, full_name, email, phone, avatar_url, signature_url, role, department,
               language, theme, notification_email, session_timeout_minutes
        FROM users WHERE id = ?`,
       [req.user.id]
@@ -55,10 +57,45 @@ exports.updateMyAvatar = async (req, res) => {
   }
 };
 
+// ── POST /users/me/signature — upload personal signature image ───────────────
+exports.uploadSignature = async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Signature image is required' });
+  try {
+    // Delete old signature file if it exists
+    const [rows] = await db.query('SELECT signature_url FROM users WHERE id = ?', [req.user.id]);
+    const old = rows[0]?.signature_url;
+    if (old) {
+      const oldPath = path.join(__dirname, '..', 'storage', 'uploads', path.basename(old));
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    const signatureUrl = `/uploads/${req.file.filename}`;
+    await db.query('UPDATE users SET signature_url = ? WHERE id = ?', [signatureUrl, req.user.id]);
+    res.json({ signature_url: signatureUrl });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to save signature image', error: err.message });
+  }
+};
+
 exports.getUsers = async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT id, full_name, email, role, department, is_active, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, full_name, email, phone, role, department, is_active, created_at FROM users ORDER BY created_at DESC'
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Returns only approvers (and admins who can approve) — accessible by all authenticated roles
+exports.getApprovers = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT id, full_name, email, role
+       FROM users
+       WHERE role IN ('approver', 'super_admin', 'system_admin') AND is_active = 1
+       ORDER BY full_name ASC`
     );
     res.json(rows);
   } catch (err) {
@@ -87,11 +124,11 @@ exports.createUser = async (req, res) => {
 };
 
 exports.updateUser = async (req, res) => {
-  const { full_name, department, is_active } = req.body;
+  const { full_name, phone, department, is_active } = req.body;
   try {
     await db.query(
-      'UPDATE users SET full_name = ?, department = ?, is_active = ? WHERE id = ?',
-      [full_name, department, is_active, req.params.id]
+      'UPDATE users SET full_name = ?, phone = ?, department = ?, is_active = ? WHERE id = ?',
+      [full_name, phone || null, department || null, is_active, req.params.id]
     );
     res.json({ message: 'User updated' });
   } catch (err) {
